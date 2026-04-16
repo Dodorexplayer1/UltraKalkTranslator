@@ -155,7 +155,7 @@ const chatRef = db.collection("chat");
 
 let lastResult = "";
 
-/* 🌍 50 Sprachen */
+/* 50 SPRACHEN */
 const languages = {
   en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
   it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
@@ -182,7 +182,7 @@ function loadLanguages(){
   }
 }
 
-/* TRANSLATE (FIX MIT EMAIL = STABILER) */
+/* TRANSLATE */
 async function translateText(){
   let text=document.getElementById("text").value;
   let from=document.getElementById("fromLang").value;
@@ -202,28 +202,27 @@ async function translateText(){
     );
 
     let data = await res.json();
-
     lastResult = data?.responseData?.translatedText || "";
-
     document.getElementById("output").innerText = lastResult;
 
   }catch(e){
-    document.getElementById("output").innerText =
-      "Übersetzung aktuell nicht verfügbar";
+    document.getElementById("output").innerText="Fehler";
   }
 }
 
-/* SIMPLIFY */
+/* ✔ FIXED SIMPLIFY */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value || "";
 
   if(!text.trim()){
-    document.getElementById("output").innerText = "Kein Text zum Vereinfachen";
+    document.getElementById("output").innerText="Kein Text zum Vereinfachen";
     return;
   }
 
   let result = text
-    .replace(/\b(sehr|wirklich|ziemlich|eigentlich|relativ|komplex)\b/gi,"")
+    .replace(/\b(sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene|unterschiedlich)\b/gi,"")
+    .replace(/\b(durchgeführt|implementiert|realisiert|ausgeführt)\b/gi,"gemacht")
+    .replace(/\b(Informationen|Details|Aspekte|Daten)\b/gi,"Infos")
     .replace(/\s+/g," ")
     .trim();
 
@@ -231,31 +230,40 @@ function simplifyText(){
     "VEREINFACHT:\n\n" + result;
 }
 
-/* SUMMARIZE */
+/* ✔ FIXED SUMMARIZE */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value || "";
 
   if(!text.trim()){
-    document.getElementById("output").innerText = "Kein Text zum Zusammenfassen";
+    document.getElementById("output").innerText="Kein Text zum Zusammenfassen";
     return;
   }
 
-  let sentences = text.split(".").filter(s => s.trim());
+  let sentences = text.split(/[.!?]/).map(s=>s.trim()).filter(Boolean);
 
-  let short = sentences.slice(0, Math.ceil(sentences.length * 0.3));
+  if(sentences.length <= 1){
+    document.getElementById("output").innerText=text;
+    return;
+  }
+
+  let keep = [
+    sentences[0],
+    sentences[Math.floor(sentences.length/2)],
+    sentences[sentences.length-1]
+  ];
 
   document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" + short.join(".");
+    "ZUSAMMENFASSUNG:\n\n" + keep.join(". ") + ".";
 }
 
 /* MENU */
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("hidden");
 }
-function openSettings(){ document.getElementById("output").innerText="Settings"; }
-function openLogin(){ document.getElementById("output").innerText="Login"; }
-function openSupport(){ document.getElementById("output").innerText="Support"; }
-function openRules(){ document.getElementById("output").innerText="Regeln"; }
+function openSettings(){document.getElementById("output").innerText="Settings";}
+function openLogin(){document.getElementById("output").innerText="Login";}
+function openSupport(){document.getElementById("output").innerText="Support";}
+function openRules(){document.getElementById("output").innerText="Regeln";}
 
 /* CHAT */
 function sendChat(){
@@ -267,17 +275,15 @@ function sendChat(){
 }
 
 function loadChat(){
-  chatRef.orderBy("time").onSnapshot(snapshot=>{
+  chatRef.orderBy("time").onSnapshot(s=>{
     let box=document.getElementById("chatMessages");
     box.innerHTML="";
-
-    snapshot.forEach(doc=>{
+    s.forEach(d=>{
       let div=document.createElement("div");
-      div.innerText="💡 "+doc.data().text;
+      div.innerText="💡 "+d.data().text;
       box.appendChild(div);
     });
-
-    box.scrollTop = box.scrollHeight;
+    box.scrollTop=box.scrollHeight;
   });
 }
 
