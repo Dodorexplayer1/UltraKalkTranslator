@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator 100+ Full</title>
+  <title>Ultra Translator 50 Stable</title>
 
   <style>
     body {
@@ -68,7 +68,7 @@
 <body>
 
 <div class="card">
-  <h2>Ultra Translator 100+ Full</h2>
+  <h2>Ultra Translator 50 Stable</h2>
 
   <textarea id="text" placeholder="Text eingeben"></textarea>
 
@@ -89,36 +89,61 @@
 
 let lastResult = "";
 
-/* 🌍 100+ feste Sprachen (stabil & komplett im Code) */
+/* 🌍 EXAKT 50 SPRACHEN */
 const languages = {
-  af:"Afrikaans", sq:"Albanisch", am:"Amharisch", ar:"Arabisch",
-  hy:"Armenisch", az:"Aserbaidschanisch", eu:"Baskisch", be:"Belarussisch",
-  bn:"Bengalisch", bs:"Bosnisch", bg:"Bulgarisch", ca:"Katalanisch",
-  ceb:"Cebuano", ny:"Chichewa", zh:"Chinesisch", co:"Korsisch",
-  hr:"Kroatisch", cs:"Tschechisch", da:"Dänisch", nl:"Niederländisch",
-  en:"Englisch", eo:"Esperanto", et:"Estnisch", fi:"Finnisch",
-  fr:"Französisch", fy:"Friesisch", gl:"Galizisch", ka:"Georgisch",
-  de:"Deutsch", el:"Griechisch", gu:"Gujarati", ht:"Haitianisch",
-  ha:"Hausa", haw:"Hawaiianisch", he:"Hebräisch", hi:"Hindi",
-  hu:"Ungarisch", is:"Isländisch", id:"Indonesisch", ga:"Irisch",
-  it:"Italienisch", ja:"Japanisch", jw:"Javanisch", kn:"Kannada",
-  kk:"Kasachisch", km:"Khmer", ko:"Koreanisch", ku:"Kurdisch",
-  ky:"Kirgisisch", lo:"Laotisch", la:"Latein", lv:"Lettisch",
-  lt:"Litauisch", lb:"Luxemburgisch", mk:"Mazedonisch", mg:"Madagassisch",
-  ms:"Malaiisch", ml:"Malayalam", mt:"Maltesisch", mi:"Maori",
-  mr:"Marathi", mn:"Mongolisch", my:"Burmesisch", ne:"Nepalesisch",
-  no:"Norwegisch", ps:"Paschtu", fa:"Persisch", pl:"Polnisch",
-  pt:"Portugiesisch", pa:"Punjabi", ro:"Rumänisch", ru:"Russisch",
-  sm:"Samoanisch", gd:"Schottisch-Gälisch", sr:"Serbisch", st:"Sesotho",
-  sn:"Shona", sd:"Sindhi", si:"Singhalesisch", sk:"Slowakisch",
-  sl:"Slowenisch", so:"Somali", es:"Spanisch", su:"Sundanesisch",
-  sw:"Swahili", sv:"Schwedisch", tl:"Tagalog", tg:"Tadschikisch",
-  ta:"Tamil", te:"Telugu", th:"Thailändisch", tr:"Türkisch",
-  uk:"Ukrainisch", ur:"Urdu", uz:"Usbekisch", vi:"Vietnamesisch",
-  cy:"Walisisch", xh:"Xhosa", yi:"Jiddisch", yo:"Yoruba", zu:"Zulu"
+  en:"Englisch",
+  de:"Deutsch",
+  fr:"Französisch",
+  es:"Spanisch",
+  it:"Italienisch",
+  pt:"Portugiesisch",
+  ru:"Russisch",
+  zh:"Chinesisch",
+  ja:"Japanisch",
+  ko:"Koreanisch",
+  ar:"Arabisch",
+  hi:"Hindi",
+  fa:"Persisch",
+  ur:"Urdu",
+  bn:"Bengalisch",
+  tr:"Türkisch",
+  vi:"Vietnamesisch",
+  id:"Indonesisch",
+  pl:"Polnisch",
+  uk:"Ukrainisch",
+  nl:"Niederländisch",
+  el:"Griechisch",
+  sv:"Schwedisch",
+  da:"Dänisch",
+  fi:"Finnisch",
+  no:"Norwegisch",
+  cs:"Tschechisch",
+  ro:"Rumänisch",
+  hu:"Ungarisch",
+  he:"Hebräisch",
+  th:"Thailändisch",
+  ms:"Malaiisch",
+  tl:"Filipino",
+  sw:"Swahili",
+  ta:"Tamil",
+  te:"Telugu",
+  ml:"Malayalam",
+  kn:"Kannada",
+  pa:"Punjabi",
+  mr:"Marathi",
+  ne:"Nepalesisch",
+  si:"Singhalesisch",
+  my:"Burmesisch",
+  km:"Khmer",
+  lo:"Laotisch",
+  am:"Amharisch",
+  az:"Aserbaidschanisch",
+  so:"Somali",
+  zu:"Zulu",
+  yo:"Yoruba"
 };
 
-/* 🌍 LOAD */
+/* LOAD */
 function loadLanguages(){
   let from = document.getElementById("fromLang");
   let to = document.getElementById("toLang");
@@ -141,7 +166,7 @@ function loadLanguages(){
   }
 }
 
-/* 🌍 TRANSLATE */
+/* TRANSLATE */
 async function translateText(){
   let text = document.getElementById("text").value;
   let from = document.getElementById("fromLang").value;
@@ -171,7 +196,7 @@ async function translateText(){
   }
 }
 
-/* 🧠 VEREINFACHEN (FIXED) */
+/* VEREINFACHEN */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -181,17 +206,22 @@ function simplifyText(){
   }
 
   let result = text
-    .replace(/kompliziert|schwierig|durchgeführt|implementiert|Transformation/gi,"gemacht")
+    .replace(/sehr|wirklich|ziemlich|eigentlich/gi,"")
+    .replace(/durchgeführt|implementiert/gi,"gemacht")
     .replace(/Kommunikation/gi,"Austausch")
-    .replace(/andererseits|daher|deshalb|somit/gi,"aber")
     .replace(/\s+/g," ")
     .trim();
+
+  let words = result.split(" ");
+  if(words.length > 40){
+    result = words.slice(0,40).join(" ") + "...";
+  }
 
   document.getElementById("output").innerText =
     "VEREINFACHT:\n\n" + result;
 }
 
-/* 🧠 ZUSAMMENFASSEN (FIXED) */
+/* ZUSAMMENFASSEN */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -200,10 +230,7 @@ function summarizeText(){
     return;
   }
 
-  let sentences = text
-    .split(".")
-    .map(s => s.trim())
-    .filter(s => s.length > 10);
+  let sentences = text.split(".").map(s => s.trim()).filter(s => s.length > 5);
 
   if(sentences.length <= 2){
     document.getElementById("output").innerText =
@@ -211,14 +238,12 @@ function summarizeText(){
     return;
   }
 
-  let summary = [
-    sentences[0],
-    sentences[Math.floor(sentences.length / 2)],
-    sentences[sentences.length - 1]
-  ].join(". ") + ".";
+  let keep = Math.max(1, Math.ceil(sentences.length * 0.3));
+
+  let summary = sentences.slice(0, keep).join(". ");
 
   document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" + summary;
+    "ZUSAMMENFASSUNG:\n\n" + summary + ".";
 }
 
 window.onload = loadLanguages;
