@@ -20,7 +20,7 @@
       padding: 20px;
       border-radius: 15px;
       width: 90%;
-      max-width: 450px;
+      max-width: 500px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
@@ -30,7 +30,6 @@
       padding: 10px;
       border-radius: 8px;
       border: none;
-      font-size: 14px;
     }
 
     button {
@@ -61,17 +60,7 @@
 
   <textarea id="text" placeholder="Text eingeben"></textarea>
 
-  <select id="lang">
-    <option value="en">Englisch</option>
-    <option value="es">Spanisch</option>
-    <option value="fr">Französisch</option>
-    <option value="it">Italienisch</option>
-    <option value="tr">Türkisch</option>
-    <option value="ru">Russisch</option>
-    <option value="ar">Arabisch</option>
-    <option value="zh">Chinesisch</option>
-    <option value="ja">Japanisch</option>
-  </select>
+  <select id="lang"></select>
 
   <button onclick="translateText()">Übersetzen</button>
 
@@ -79,31 +68,52 @@
 </div>
 
 <script>
-async function translateText() {
+async function loadLanguages(){
+  try {
+    let res = await fetch("https://libretranslate.de/languages");
+    let langs = await res.json();
+
+    let select = document.getElementById("lang");
+
+    langs.forEach(l => {
+      let option = document.createElement("option");
+      option.value = l.code;
+      option.textContent = l.name;
+      select.appendChild(option);
+    });
+
+  } catch(e){
+    document.getElementById("output").innerText =
+      "Sprachen konnten nicht geladen werden";
+  }
+}
+
+async function translateText(){
   let text = document.getElementById("text").value;
   let lang = document.getElementById("lang").value;
 
-  if (!text) {
+  if(!text){
     document.getElementById("output").innerText = "Bitte Text eingeben";
     return;
   }
 
-  try {
-    let response = await fetch(
-      "https://api.mymemory.translated.net/get?q="
+  try{
+    let res = await fetch("https://api.mymemory.translated.net/get?q="
       + encodeURIComponent(text)
-      + "&langpair=de|" + lang
-    );
+      + "&langpair=de|" + lang);
 
-    let data = await response.json();
+    let data = await res.json();
 
     document.getElementById("output").innerText =
       data.responseData.translatedText;
-  } catch (e) {
+
+  }catch(e){
     document.getElementById("output").innerText =
       "Fehler beim Übersetzen";
   }
 }
+
+window.onload = loadLanguages;
 </script>
 
 </body>
