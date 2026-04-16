@@ -21,6 +21,7 @@
       border-radius: 15px;
       width: 90%;
       max-width: 520px;
+      position: relative;
     }
 
     textarea, select, button {
@@ -57,12 +58,58 @@
       min-height: 40px;
       white-space: pre-wrap;
     }
+
+    /* 🔥 MENU */
+    .menu-icon {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 22px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .menu {
+      position: absolute;
+      top: 40px;
+      right: 10px;
+      background: #111827;
+      border-radius: 10px;
+      width: 180px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .menu div {
+      padding: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .menu div:hover {
+      background: #1f2937;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
 <div class="card">
+
+  <!-- 🔥 MENU BUTTON -->
+  <div class="menu-icon" onclick="toggleMenu()">|||</div>
+
+  <div id="menu" class="menu hidden">
+    <div onclick="openSettings()">Settings</div>
+    <div onclick="openLogin()">Login</div>
+    <div onclick="openSupport()">Help & Support</div>
+    <div onclick="openRules()">Regeln</div>
+  </div>
+
   <h2>Ultra Translator 50 Stable</h2>
 
   <textarea id="text"></textarea>
@@ -84,58 +131,21 @@
 
 let lastResult = "";
 
-/* 🌍 50 Sprachen (UNVERÄNDERT) */
+/* 🌍 50 Sprachen (BEIBEHALTEN) */
 const languages = {
-  en:"Englisch",
-  de:"Deutsch",
-  fr:"Französisch",
-  es:"Spanisch",
-  it:"Italienisch",
-  pt:"Portugiesisch",
-  ru:"Russisch",
-  zh:"Chinesisch",
-  ja:"Japanisch",
-  ko:"Koreanisch",
-  ar:"Arabisch",
-  hi:"Hindi",
-  fa:"Persisch",
-  ur:"Urdu",
-  bn:"Bengalisch",
-  tr:"Türkisch",
-  vi:"Vietnamesisch",
-  id:"Indonesisch",
-  pl:"Polnisch",
-  uk:"Ukrainisch",
-  nl:"Niederländisch",
-  el:"Griechisch",
-  sv:"Schwedisch",
-  da:"Dänisch",
-  fi:"Finnisch",
-  no:"Norwegisch",
-  cs:"Tschechisch",
-  ro:"Rumänisch",
-  hu:"Ungarisch",
-  he:"Hebräisch",
-  th:"Thailändisch",
-  ms:"Malaiisch",
-  tl:"Filipino",
-  sw:"Swahili",
-  ta:"Tamil",
-  te:"Telugu",
-  ml:"Malayalam",
-  kn:"Kannada",
-  pa:"Punjabi",
-  mr:"Marathi",
-  ne:"Nepalesisch",
-  si:"Singhalesisch",
-  my:"Burmesisch",
-  km:"Khmer",
-  lo:"Laotisch",
-  am:"Amharisch",
-  az:"Aserbaidschanisch",
-  so:"Somali",
-  zu:"Zulu",
-  yo:"Yoruba"
+  en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
+  it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
+  ja:"Japanisch", ko:"Koreanisch", ar:"Arabisch", hi:"Hindi",
+  fa:"Persisch", ur:"Urdu", bn:"Bengalisch", tr:"Türkisch",
+  vi:"Vietnamesisch", id:"Indonesisch", pl:"Polnisch", uk:"Ukrainisch",
+  nl:"Niederländisch", el:"Griechisch", sv:"Schwedisch", da:"Dänisch",
+  fi:"Finnisch", no:"Norwegisch", cs:"Tschechisch", ro:"Rumänisch",
+  hu:"Ungarisch", he:"Hebräisch", th:"Thailändisch", ms:"Malaiisch",
+  tl:"Filipino", sw:"Swahili", ta:"Tamil", te:"Telugu",
+  ml:"Malayalam", kn:"Kannada", pa:"Punjabi", mr:"Marathi",
+  ne:"Nepalesisch", si:"Singhalesisch", my:"Burmesisch", km:"Khmer",
+  lo:"Laotisch", am:"Amharisch", az:"Aserbaidschanisch", so:"Somali",
+  zu:"Zulu", yo:"Yoruba"
 };
 
 /* LOAD */
@@ -177,12 +187,11 @@ async function translateText(){
     document.getElementById("output").innerText = lastResult;
 
   }catch(e){
-    document.getElementById("output").innerText =
-      "Übersetzung fehlgeschlagen";
+    document.getElementById("output").innerText = "Fehler beim Übersetzen";
   }
 }
 
-/* 🔥 FIXED VEREINFACHEN (deutlich stärker sichtbar) */
+/* VEREINFACHEN */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -191,33 +200,13 @@ function simplifyText(){
     return;
   }
 
-  let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
-
-  let simplified = sentences.map(s => {
-
-    let t = s
-      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene/gi,"")
-      .replace(/durchgeführt|implementiert|realisiert|ausgeführt/gi,"gemacht")
-      .replace(/Kommunikation|Interaktion|Korrespondenz/gi,"Austausch")
-      .replace(/Informationen?|Details|Daten|Aspekte/gi,"Infos")
-      .replace(/aufgrund der Tatsache dass|weil der Grund ist dass/gi,"weil")
-      .replace(/\s+/g," ")
-      .trim();
-
-    // 🔥 echte Vereinfachung: Satz wird auf Hauptaussage reduziert
-    if(t.length > 90){
-      t = t.split(",")[0];
-    }
-
-    return t;
-  });
-
-  simplified = simplified.filter(s => s.length > 10);
-
-  simplified = simplified.slice(0, Math.max(1, Math.ceil(simplified.length * 0.5)));
+  let result = text
+    .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex/gi,"")
+    .replace(/\s+/g," ")
+    .trim();
 
   document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + simplified.join(". ");
+    "VEREINFACHT:\n\n" + result;
 }
 
 /* ZUSAMMENFASSEN */
@@ -236,6 +225,31 @@ function summarizeText(){
   document.getElementById("output").innerText =
     "ZUSAMMENFASSUNG:\n\n" +
     sentences.slice(0, keep).join(". ") + ".";
+}
+
+/* 🔥 MENU FUNCTIONS */
+function toggleMenu(){
+  document.getElementById("menu").classList.toggle("hidden");
+}
+
+function openSettings(){
+  document.getElementById("output").innerText =
+    "Settings:\n- Sprache\n- UI Optionen\n- zukünftige Features";
+}
+
+function openLogin(){
+  document.getElementById("output").innerText =
+    "Login:\n(noch nicht verbunden mit Backend)";
+}
+
+function openSupport(){
+  document.getElementById("output").innerText =
+    "Help & Support:\nWenn Fehler auftreten, Seite neu laden";
+}
+
+function openRules(){
+  document.getElementById("output").innerText =
+    "Regeln:\n1. Text eingeben\n2. Sprache wählen\n3. Keine leeren Anfragen";
 }
 
 /* INIT */
