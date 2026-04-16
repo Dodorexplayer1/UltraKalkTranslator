@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ahmad Ultra Translator</title>
+  <title>Ultra Translator 50 Stable</title>
 
   <style>
     body {
@@ -94,7 +94,7 @@
       display: none;
     }
 
-    /* 💬 CHAT */
+    /* CHAT */
     #chatBox {
       position: fixed;
       bottom: 10px;
@@ -156,7 +156,7 @@
   <div id="output"></div>
 </div>
 
-<!-- 💬 CHAT -->
+<!-- CHAT -->
 <div id="chatBox">
   <div><b>💬 Tipps</b></div>
 
@@ -220,6 +220,7 @@ async function translateText(){
     );
 
     let data = await res.json();
+
     lastResult = data?.responseData?.translatedText || text;
 
     document.getElementById("output").innerText = lastResult;
@@ -229,7 +230,7 @@ async function translateText(){
   }
 }
 
-/* 🔥 VEREINFACHEN (stärker + sichtbar anders) */
+/* 🔥 VEREINFACHEN (UNGEKÜRZT + STARK) */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -243,14 +244,13 @@ function simplifyText(){
   let simplified = sentences.map(s => {
 
     let t = s
-      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene/gi,"")
+      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex/gi,"")
       .replace(/durchgeführt|implementiert|realisiert|ausgeführt/gi,"gemacht")
       .replace(/Kommunikation|Interaktion|Korrespondenz/gi,"Austausch")
       .replace(/Informationen?|Details|Daten|Aspekte/gi,"Infos")
       .replace(/\s+/g," ")
       .trim();
 
-    // 🔥 echte Vereinfachung
     if(t.length > 80){
       t = t.split(",")[0];
     }
@@ -258,15 +258,11 @@ function simplifyText(){
     return t;
   });
 
-  simplified = simplified
-    .filter(s => s.length > 10)
-    .slice(0, Math.max(1, Math.ceil(simplified.length * 0.5)));
-
   document.getElementById("output").innerText =
     "VEREINFACHT:\n\n" + simplified.join(". ");
 }
 
-/* 🔥 ZUSAMMENFASSEN (echter Cut statt nur erste Sätze) */
+/* 🔥 ZUSAMMENFASSEN (keine harte Limitierung mehr) */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -277,12 +273,9 @@ function summarizeText(){
 
   let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
 
-  // 🔥 erlaubt längere Texte, aber kürzt sinnvoll
-  let keep = Math.max(1, Math.ceil(sentences.length * 0.25));
+  let keep = Math.max(1, Math.ceil(sentences.length * 0.35));
 
-  let summary = sentences
-    .sort(() => Math.random() - 0.3) // leichte Auswahl statt nur Anfang
-    .slice(0, keep);
+  let summary = sentences.slice(0, keep);
 
   document.getElementById("output").innerText =
     "ZUSAMMENFASSUNG:\n\n" + summary.join(". ") + ".";
@@ -294,7 +287,8 @@ function toggleMenu(){
 }
 
 function openSettings(){
-  document.getElementById("output").innerText = "Settings geöffnet";
+  document.getElementById("output").innerText =
+    "Settings:\n- Sprache\n- UI Optionen\n- zukünftige Updates";
 }
 
 function openLogin(){
@@ -310,26 +304,44 @@ function openRules(){
     "Regeln:\n- Text eingeben\n- Sprache wählen\n- Funktion nutzen";
 }
 
-/* CHAT */
+/* 💬 CHAT (SPEICHERT JETZT WIRKLICH) */
 function sendChat(){
   let input = document.getElementById("chatInput");
   let msg = input.value.trim();
 
   if(!msg) return;
 
-  let box = document.getElementById("chatMessages");
+  let messages = JSON.parse(localStorage.getItem("chatMessages") || "[]");
 
-  let div = document.createElement("div");
-  div.innerText = "💡 " + msg;
+  messages.push(msg);
 
-  box.appendChild(div);
+  localStorage.setItem("chatMessages", JSON.stringify(messages));
 
   input.value = "";
+
+  loadChat();
+}
+
+function loadChat(){
+  let box = document.getElementById("chatMessages");
+  box.innerHTML = "";
+
+  let messages = JSON.parse(localStorage.getItem("chatMessages") || "[]");
+
+  messages.forEach(msg => {
+    let div = document.createElement("div");
+    div.innerText = "💡 " + msg;
+    box.appendChild(div);
+  });
+
   box.scrollTop = box.scrollHeight;
 }
 
 /* INIT */
-document.addEventListener("DOMContentLoaded", loadLanguages);
+document.addEventListener("DOMContentLoaded", function(){
+  loadLanguages();
+  loadChat();
+});
 
 </script>
 
