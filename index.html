@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ultra Translator</title>
+</head>
+<body>
+
+<h1>Mein Übersetzer</h1>
+
+<textarea id="text" placeholder="Text eingeben"></textarea>
+
+<select id="lang">
+  <option value="en">Englisch</option>
+  <option value="es">Spanisch</option>
+  <option value="fr">Französisch</option>
+</select>
+
+<button onclick="translateText()">Übersetzen</button>
+
+<p id="output"></p>
+
+<script>
+function translateText() {
+  let text = document.getElementById("text").value;
+  let lang = document.getElementById("lang").value;
+
+  if (lang === "en") {
+    document.getElementById("output").innerText = "EN: " + text;
+  } else if (lang === "es") {
+    document.getElementById("output").innerText = "ES: " + text;
+  } else {
+    document.getElementById("output").innerText = "FR: " + text;
+  }
+}
+</script>
+
+</body>
+</html>
