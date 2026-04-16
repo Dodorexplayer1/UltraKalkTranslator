@@ -1,126 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator 50 Stable</title>
+  <title>Ultra Translator 50 Final</title>
+
+  <!-- FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <style>
     body {
-      margin: 0;
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      margin:0;
+      font-family:Arial;
+      background:#0f172a;
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
     }
 
     .card {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 15px;
-      width: 90%;
-      max-width: 520px;
-      position: relative;
+      background:#1e293b;
+      padding:20px;
+      border-radius:15px;
+      width:90%;
+      max-width:520px;
+      position:relative;
     }
 
-    textarea, select, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 14px;
+    textarea,select,button{
+      width:100%;
+      margin-top:10px;
+      padding:10px;
+      border-radius:8px;
+      border:none;
+      font-size:14px;
     }
 
-    button {
-      background: #3b82f6;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
+    button{
+      background:#3b82f6;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
     }
 
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
     }
 
-    .row button {
-      flex: 1;
+    .row button{ flex:1; }
+
+    #output{
+      margin-top:15px;
+      padding:10px;
+      background:#0f172a;
+      border-radius:8px;
+      min-height:60px;
+      white-space:pre-wrap;
     }
 
-    #output {
-      margin-top: 15px;
-      padding: 10px;
-      background: #0f172a;
-      border-radius: 8px;
-      min-height: 40px;
-      white-space: pre-wrap;
+    .menu-icon{
+      position:absolute;
+      top:10px;
+      right:12px;
+      font-size:22px;
+      cursor:pointer;
     }
 
-    /* MENU */
-    .menu-icon {
-      position: absolute;
-      top: 10px;
-      right: 12px;
-      font-size: 22px;
-      cursor: pointer;
-      user-select: none;
+    .menu{
+      position:absolute;
+      top:40px;
+      right:10px;
+      background:#111827;
+      border-radius:10px;
+      width:180px;
     }
 
-    .menu {
-      position: absolute;
-      top: 40px;
-      right: 10px;
-      background: #111827;
-      border-radius: 10px;
-      width: 180px;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    .menu div{
+      padding:12px;
+      cursor:pointer;
+      border-bottom:1px solid #1f2937;
     }
 
-    .menu div {
-      padding: 12px;
-      cursor: pointer;
-      border-bottom: 1px solid #1f2937;
+    .menu div:hover{
+      background:#1f2937;
     }
 
-    .menu div:hover {
-      background: #1f2937;
+    .hidden{display:none;}
+
+    #chatBox{
+      position:fixed;
+      bottom:10px;
+      right:10px;
+      width:240px;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      font-size:12px;
     }
 
-    .hidden {
-      display: none;
+    #chatMessages{
+      height:140px;
+      overflow-y:auto;
+      background:#0f172a;
+      padding:5px;
+      border-radius:5px;
+      margin-bottom:5px;
     }
 
-    /* CHAT */
-    #chatBox {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      width: 220px;
-      background: #111827;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 12px;
-    }
-
-    #chatMessages {
-      height: 120px;
-      overflow-y: auto;
-      background: #0f172a;
-      padding: 5px;
-      border-radius: 5px;
-      margin-bottom: 5px;
-    }
-
-    #chatInput {
-      width: 100%;
-      margin-top: 5px;
-      padding: 5px;
-      border-radius: 5px;
-      border: none;
+    #chatInput{
+      width:100%;
+      padding:5px;
+      border-radius:5px;
+      border:none;
     }
   </style>
 </head>
@@ -129,7 +123,6 @@
 
 <div class="card">
 
-  <!-- MENU -->
   <div class="menu-icon" onclick="toggleMenu()">|||</div>
 
   <div id="menu" class="menu hidden">
@@ -139,7 +132,7 @@
     <div onclick="openRules()">Regeln</div>
   </div>
 
-  <h2>Ultra Translator 50 Stable</h2>
+  <h2>Ultra Translator 50 Final</h2>
 
   <textarea id="text"></textarea>
 
@@ -156,19 +149,30 @@
   <div id="output"></div>
 </div>
 
-<!-- CHAT -->
 <div id="chatBox">
-  <div><b>💬 Tipps</b></div>
-
+  <b>💬 Tipps</b>
   <div id="chatMessages"></div>
-
   <input id="chatInput" placeholder="Tipp schreiben..." />
   <button onclick="sendChat()">Senden</button>
 </div>
 
 <script>
 
-let lastResult = "";
+/* FIREBASE */
+const firebaseConfig = {
+  apiKey: "AIzaSyAjS5W-l2Hm_iBSq4_az2WReQwY4ZmEweU",
+  authDomain: "projekt-erstellen-dfc13.firebaseapp.com",
+  projectId: "projekt-erstellen-dfc13",
+  storageBucket: "projekt-erstellen-dfc13.firebasestorage.app",
+  messagingSenderId: "1040865035180",
+  appId: "1:1040865035180:web:273c7c1998d9b57664f009"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const chatRef = db.collection("chat");
+
+let lastResult="";
 
 /* 🌍 50 Sprachen */
 const languages = {
@@ -187,98 +191,65 @@ const languages = {
   zu:"Zulu", yo:"Yoruba"
 };
 
-/* LOAD */
 function loadLanguages(){
-  const from = document.getElementById("fromLang");
-  const to = document.getElementById("toLang");
+  let f=document.getElementById("fromLang");
+  let t=document.getElementById("toLang");
 
-  from.innerHTML = "";
-  to.innerHTML = "";
-
-  for(let code in languages){
-    from.add(new Option(languages[code], code));
-    to.add(new Option(languages[code], code));
+  for(let c in languages){
+    f.add(new Option(languages[c],c));
+    t.add(new Option(languages[c],c));
   }
 }
 
 /* TRANSLATE */
 async function translateText(){
-  let text = document.getElementById("text").value;
-  let from = document.getElementById("fromLang").value;
-  let to = document.getElementById("toLang").value;
+  let text=document.getElementById("text").value;
+  let from=document.getElementById("fromLang").value;
+  let to=document.getElementById("toLang").value;
 
-  if(!text){
-    document.getElementById("output").innerText = "Bitte Text eingeben";
-    return;
-  }
+  let res=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+from+"|"+to);
+  let data=await res.json();
 
-  try{
-    let res = await fetch(
-      "https://api.mymemory.translated.net/get?q="
-      + encodeURIComponent(text)
-      + "&langpair=" + from + "|" + to
-    );
-
-    let data = await res.json();
-
-    lastResult = data?.responseData?.translatedText || text;
-
-    document.getElementById("output").innerText = lastResult;
-
-  }catch(e){
-    document.getElementById("output").innerText = "Übersetzung Fehler";
-  }
+  lastResult=data.responseData.translatedText;
+  document.getElementById("output").innerText=lastResult;
 }
 
-/* 🔥 VEREINFACHEN (UNGEKÜRZT + STARK) */
+/* 🔥 STARKE VERSION (NICHT MEHR ANFASSEN) */
 function simplifyText(){
-  let text = lastResult || document.getElementById("text").value;
+  let text=lastResult||document.getElementById("text").value;
 
-  if(!text){
-    document.getElementById("output").innerText = "Kein Text vorhanden";
-    return;
-  }
+  let sentences=text.split(".").map(s=>s.trim()).filter(Boolean);
 
-  let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
-
-  let simplified = sentences.map(s => {
-
-    let t = s
-      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex/gi,"")
+  let result=sentences.map(s=>{
+    let t=s
+      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene/gi,"")
       .replace(/durchgeführt|implementiert|realisiert|ausgeführt/gi,"gemacht")
       .replace(/Kommunikation|Interaktion|Korrespondenz/gi,"Austausch")
       .replace(/Informationen?|Details|Daten|Aspekte/gi,"Infos")
       .replace(/\s+/g," ")
       .trim();
 
-    if(t.length > 80){
-      t = t.split(",")[0];
+    if(t.length>80){
+      t=t.split(",")[0];
     }
 
     return t;
   });
 
-  document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + simplified.join(". ");
+  document.getElementById("output").innerText="VEREINFACHT:\n\n"+result.join(". ");
 }
 
-/* 🔥 ZUSAMMENFASSEN (keine harte Limitierung mehr) */
+/* 🔥 STARKE ZUSAMMENFASSUNG */
 function summarizeText(){
-  let text = lastResult || document.getElementById("text").value;
+  let text=lastResult||document.getElementById("text").value;
 
-  if(!text){
-    document.getElementById("output").innerText = "Kein Text vorhanden";
-    return;
-  }
+  let sentences=text.split(".").map(s=>s.trim()).filter(Boolean);
 
-  let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
+  let keep=Math.max(1,Math.ceil(sentences.length*0.35));
 
-  let keep = Math.max(1, Math.ceil(sentences.length * 0.35));
+  let summary=sentences.slice(0,keep);
 
-  let summary = sentences.slice(0, keep);
-
-  document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" + summary.join(". ") + ".";
+  document.getElementById("output").innerText="ZUSAMMENFASSUNG:\n\n"+summary.join(". ")+".";
 }
 
 /* MENU */
@@ -287,58 +258,44 @@ function toggleMenu(){
 }
 
 function openSettings(){
-  document.getElementById("output").innerText =
-    "Settings:\n- Sprache\n- UI Optionen\n- zukünftige Updates";
+  document.getElementById("output").innerText="⚙️ Settings\nzukünftige Updates";
 }
 
 function openLogin(){
-  document.getElementById("output").innerText = "Login (Demo)";
+  document.getElementById("output").innerText="Login";
 }
 
 function openSupport(){
-  document.getElementById("output").innerText = "Support Bereich";
+  document.getElementById("output").innerText="Support";
 }
 
 function openRules(){
-  document.getElementById("output").innerText =
-    "Regeln:\n- Text eingeben\n- Sprache wählen\n- Funktion nutzen";
+  document.getElementById("output").innerText="Regeln";
 }
 
-/* 💬 CHAT (SPEICHERT JETZT WIRKLICH) */
+/* GLOBAL CHAT */
 function sendChat(){
-  let input = document.getElementById("chatInput");
-  let msg = input.value.trim();
-
+  let msg=document.getElementById("chatInput").value;
   if(!msg) return;
 
-  let messages = JSON.parse(localStorage.getItem("chatMessages") || "[]");
-
-  messages.push(msg);
-
-  localStorage.setItem("chatMessages", JSON.stringify(messages));
-
-  input.value = "";
-
-  loadChat();
+  chatRef.add({text:msg,time:Date.now()});
+  document.getElementById("chatInput").value="";
 }
 
 function loadChat(){
-  let box = document.getElementById("chatMessages");
-  box.innerHTML = "";
-
-  let messages = JSON.parse(localStorage.getItem("chatMessages") || "[]");
-
-  messages.forEach(msg => {
-    let div = document.createElement("div");
-    div.innerText = "💡 " + msg;
-    box.appendChild(div);
+  chatRef.orderBy("time").onSnapshot(snapshot=>{
+    let box=document.getElementById("chatMessages");
+    box.innerHTML="";
+    snapshot.forEach(doc=>{
+      let div=document.createElement("div");
+      div.innerText="💡 "+doc.data().text;
+      box.appendChild(div);
+    });
+    box.scrollTop=box.scrollHeight;
   });
-
-  box.scrollTop = box.scrollHeight;
 }
 
-/* INIT */
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded",function(){
   loadLanguages();
   loadChat();
 });
