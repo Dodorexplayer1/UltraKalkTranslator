@@ -84,40 +84,75 @@
 
 let lastResult = "";
 
-/* 🌍 50 Sprachen (UNVERÄNDERT BEIBEHALTEN) */
+/* 🌍 50 Sprachen (UNVERÄNDERT) */
 const languages = {
-  en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
-  it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
-  ja:"Japanisch", ko:"Koreanisch", ar:"Arabisch", hi:"Hindi",
-  fa:"Persisch", ur:"Urdu", bn:"Bengalisch", tr:"Türkisch",
-  vi:"Vietnamesisch", id:"Indonesisch", pl:"Polnisch", uk:"Ukrainisch",
-  nl:"Niederländisch", el:"Griechisch", sv:"Schwedisch", da:"Dänisch",
-  fi:"Finnisch", no:"Norwegisch", cs:"Tschechisch", ro:"Rumänisch",
-  hu:"Ungarisch", he:"Hebräisch", th:"Thailändisch", ms:"Malaiisch",
-  tl:"Filipino", sw:"Swahili", ta:"Tamil", te:"Telugu",
-  ml:"Malayalam", kn:"Kannada", pa:"Punjabi", mr:"Marathi",
-  ne:"Nepalesisch", si:"Singhalesisch", my:"Burmesisch", km:"Khmer",
-  lo:"Laotisch", am:"Amharisch", az:"Aserbaidschanisch", so:"Somali",
-  zu:"Zulu", yo:"Yoruba"
+  en:"Englisch",
+  de:"Deutsch",
+  fr:"Französisch",
+  es:"Spanisch",
+  it:"Italienisch",
+  pt:"Portugiesisch",
+  ru:"Russisch",
+  zh:"Chinesisch",
+  ja:"Japanisch",
+  ko:"Koreanisch",
+  ar:"Arabisch",
+  hi:"Hindi",
+  fa:"Persisch",
+  ur:"Urdu",
+  bn:"Bengalisch",
+  tr:"Türkisch",
+  vi:"Vietnamesisch",
+  id:"Indonesisch",
+  pl:"Polnisch",
+  uk:"Ukrainisch",
+  nl:"Niederländisch",
+  el:"Griechisch",
+  sv:"Schwedisch",
+  da:"Dänisch",
+  fi:"Finnisch",
+  no:"Norwegisch",
+  cs:"Tschechisch",
+  ro:"Rumänisch",
+  hu:"Ungarisch",
+  he:"Hebräisch",
+  th:"Thailändisch",
+  ms:"Malaiisch",
+  tl:"Filipino",
+  sw:"Swahili",
+  ta:"Tamil",
+  te:"Telugu",
+  ml:"Malayalam",
+  kn:"Kannada",
+  pa:"Punjabi",
+  mr:"Marathi",
+  ne:"Nepalesisch",
+  si:"Singhalesisch",
+  my:"Burmesisch",
+  km:"Khmer",
+  lo:"Laotisch",
+  am:"Amharisch",
+  az:"Aserbaidschanisch",
+  so:"Somali",
+  zu:"Zulu",
+  yo:"Yoruba"
 };
 
-/* LOAD (robust) */
+/* LOAD */
 function loadLanguages(){
   const from = document.getElementById("fromLang");
   const to = document.getElementById("toLang");
 
-  if(!from || !to) return;
-
   from.innerHTML = "";
   to.innerHTML = "";
 
-  Object.keys(languages).forEach(code => {
+  for(let code in languages){
     from.add(new Option(languages[code], code));
     to.add(new Option(languages[code], code));
-  });
+  }
 }
 
-/* TRANSLATE (FIX: fallback + safer API handling) */
+/* TRANSLATE */
 async function translateText(){
   let text = document.getElementById("text").value;
   let from = document.getElementById("fromLang").value;
@@ -129,33 +164,25 @@ async function translateText(){
   }
 
   try{
-    let url =
+    let res = await fetch(
       "https://api.mymemory.translated.net/get?q="
       + encodeURIComponent(text)
-      + "&langpair=" + from + "|" + to;
-
-    let res = await fetch(url);
-
-    if(!res.ok){
-      throw new Error("Network error");
-    }
+      + "&langpair=" + from + "|" + to
+    );
 
     let data = await res.json();
 
-    lastResult =
-      (data && data.responseData && data.responseData.translatedText)
-      ? data.responseData.translatedText
-      : text;
+    lastResult = data?.responseData?.translatedText || text;
 
     document.getElementById("output").innerText = lastResult;
 
   }catch(e){
     document.getElementById("output").innerText =
-      "Übersetzung nicht verfügbar (API Problem)";
+      "Übersetzung fehlgeschlagen";
   }
 }
 
-/* VEREINFACHEN (leicht, stabil) */
+/* 🔥 FIXED VEREINFACHEN (deutlich stärker sichtbar) */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -164,16 +191,36 @@ function simplifyText(){
     return;
   }
 
-  let result = text
-    .replace(/sehr|wirklich|ziemlich|eigentlich|relativ/gi,"")
-    .replace(/\s+/g," ")
-    .trim();
+  let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
+
+  let simplified = sentences.map(s => {
+
+    let t = s
+      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene/gi,"")
+      .replace(/durchgeführt|implementiert|realisiert|ausgeführt/gi,"gemacht")
+      .replace(/Kommunikation|Interaktion|Korrespondenz/gi,"Austausch")
+      .replace(/Informationen?|Details|Daten|Aspekte/gi,"Infos")
+      .replace(/aufgrund der Tatsache dass|weil der Grund ist dass/gi,"weil")
+      .replace(/\s+/g," ")
+      .trim();
+
+    // 🔥 echte Vereinfachung: Satz wird auf Hauptaussage reduziert
+    if(t.length > 90){
+      t = t.split(",")[0];
+    }
+
+    return t;
+  });
+
+  simplified = simplified.filter(s => s.length > 10);
+
+  simplified = simplified.slice(0, Math.max(1, Math.ceil(simplified.length * 0.5)));
 
   document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + result;
+    "VEREINFACHT:\n\n" + simplified.join(". ");
 }
 
-/* ZUSAMMENFASSEN (stabil) */
+/* ZUSAMMENFASSEN */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -191,7 +238,7 @@ function summarizeText(){
     sentences.slice(0, keep).join(". ") + ".";
 }
 
-/* INIT SAFE */
+/* INIT */
 document.addEventListener("DOMContentLoaded", loadLanguages);
 
 </script>
