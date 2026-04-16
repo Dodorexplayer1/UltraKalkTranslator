@@ -24,11 +24,32 @@ async function translateText() {
   let text = document.getElementById("text").value;
   let lang = document.getElementById("lang").value;
 
-  let response = await fetch("https://api.mymemory.translated.net/get?q=" + text + "&langpair=de|" + lang);
-  let data = await response.json();
+  if (!text) {
+    document.getElementById("output").innerText = "Bitte Text eingeben";
+    return;
+  }
 
-  document.getElementById("output").innerText =
-    data.responseData.translatedText;
+  try {
+    let response = await fetch("https://libretranslate.de/translate", {
+      method: "POST",
+      body: JSON.stringify({
+        q: text,
+        source: "de",
+        target: lang,
+        format: "text"
+      }),
+      headers: { "Content-Type": "application/json" }
+    });
+
+    let data = await response.json();
+
+    document.getElementById("output").innerText =
+      data.translatedText;
+
+  } catch (e) {
+    document.getElementById("output").innerText =
+      "Fehler: Übersetzung nicht möglich";
+  }
 }
 </script>
 
