@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator</title>
+  <title>Ultra Translator Pro</title>
 
   <style>
     body {
@@ -20,7 +20,7 @@
       padding: 20px;
       border-radius: 15px;
       width: 90%;
-      max-width: 500px;
+      max-width: 520px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
@@ -56,7 +56,7 @@
 <body>
 
 <div class="card">
-  <h2>Ultra Translator</h2>
+  <h2>Ultra Translator Pro</h2>
 
   <textarea id="text" placeholder="Text eingeben"></textarea>
 
@@ -68,23 +68,43 @@
 </div>
 
 <script>
-async function loadLanguages(){
-  try {
-    let res = await fetch("https://libretranslate.de/languages");
-    let langs = await res.json();
+const languages = {
+  af:"Afrikaans", sq:"Albanisch", am:"Amharisch", ar:"Arabisch",
+  hy:"Armenisch", az:"Aserbaidschanisch", eu:"Baskisch", be:"Belarussisch",
+  bn:"Bengalisch", bs:"Bosnisch", bg:"Bulgarisch", ca:"Katalanisch",
+  ceb:"Cebuano", zh:"Chinesisch", co:"Korsisch", hr:"Kroatisch",
+  cs:"Tschechisch", da:"Dänisch", nl:"Niederländisch", en:"Englisch",
+  eo:"Esperanto", et:"Estnisch", fi:"Finnisch", fr:"Französisch",
+  fy:"Friesisch", gl:"Galizisch", ka:"Georgisch", de:"Deutsch",
+  el:"Griechisch", gu:"Gujarati", ht:"Haitianisch", ha:"Hausa",
+  haw:"Hawaiianisch", he:"Hebräisch", hi:"Hindi", hu:"Ungarisch",
+  is:"Isländisch", id:"Indonesisch", ga:"Irisch", it:"Italienisch",
+  ja:"Japanisch", jw:"Javanisch", kn:"Kannada", kk:"Kasachisch",
+  km:"Khmer", ko:"Koreanisch", ku:"Kurdisch", ky:"Kirgisisch",
+  lo:"Laotisch", la:"Latein", lv:"Lettisch", lt:"Litauisch",
+  lb:"Luxemburgisch", mk:"Mazedonisch", mg:"Madagassisch",
+  ms:"Malaiisch", ml:"Malayalam", mt:"Maltesisch", mi:"Maori",
+  mr:"Marathi", mn:"Mongolisch", my:"Burmesisch", ne:"Nepalesisch",
+  no:"Norwegisch", ny:"Nyanja", or:"Odia", ps:"Paschtu",
+  fa:"Persisch", pl:"Polnisch", pt:"Portugiesisch", pa:"Punjabi",
+  ro:"Rumänisch", ru:"Russisch", sm:"Samoanisch", gd:"Schottisch-Gälisch",
+  sr:"Serbisch", st:"Sesotho", sn:"Shona", sd:"Sindhi",
+  si:"Singhalesisch", sk:"Slowakisch", sl:"Slowenisch",
+  so:"Somali", es:"Spanisch", su:"Sundanesisch", sw:"Swahili",
+  sv:"Schwedisch", tl:"Tagalog", tg:"Tadschikisch", ta:"Tamil",
+  te:"Telugu", th:"Thailändisch", tr:"Türkisch", uk:"Ukrainisch",
+  ur:"Urdu", uz:"Usbekisch", vi:"Vietnamesisch", cy:"Walisisch",
+  xh:"Xhosa", yi:"Jiddisch", yo:"Yoruba", zu:"Zulu"
+};
 
-    let select = document.getElementById("lang");
+function loadLanguages(){
+  let select = document.getElementById("lang");
 
-    langs.forEach(l => {
-      let option = document.createElement("option");
-      option.value = l.code;
-      option.textContent = l.name;
-      select.appendChild(option);
-    });
-
-  } catch(e){
-    document.getElementById("output").innerText =
-      "Sprachen konnten nicht geladen werden";
+  for(let code in languages){
+    let option = document.createElement("option");
+    option.value = code;
+    option.textContent = languages[code];
+    select.appendChild(option);
   }
 }
 
@@ -97,7 +117,7 @@ async function translateText(){
     return;
   }
 
-  try{
+  try {
     let res = await fetch("https://api.mymemory.translated.net/get?q="
       + encodeURIComponent(text)
       + "&langpair=de|" + lang);
@@ -107,9 +127,9 @@ async function translateText(){
     document.getElementById("output").innerText =
       data.responseData.translatedText;
 
-  }catch(e){
+  } catch (e) {
     document.getElementById("output").innerText =
-      "Fehler beim Übersetzen";
+      "Fehler beim Übersetzen (API nicht erreichbar)";
   }
 }
 
