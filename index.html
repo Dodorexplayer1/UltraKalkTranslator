@@ -72,7 +72,8 @@
 
   <textarea id="text" placeholder="Text eingeben"></textarea>
 
-  <select id="lang"></select>
+  <select id="fromLang"></select>
+  <select id="toLang"></select>
 
   <button onclick="translateText()">Übersetzen</button>
 
@@ -86,50 +87,42 @@
 
 <script>
 
-// 🌍 VOLLE 100+ SPRACHLISTE (WIEDERHERGESTELLT + STABIL)
-const languages = {
-  af:"Afrikaans", sq:"Albanisch", am:"Amharisch", ar:"Arabisch",
-  hy:"Armenisch", az:"Aserbaidschanisch", eu:"Baskisch", be:"Belarussisch",
-  bn:"Bengalisch", bs:"Bosnisch", bg:"Bulgarisch", ca:"Katalanisch",
-  ceb:"Cebuano", zh:"Chinesisch", hr:"Kroatisch", cs:"Tschechisch",
-  da:"Dänisch", nl:"Niederländisch", en:"Englisch", eo:"Esperanto",
-  et:"Estnisch", fi:"Finnisch", fr:"Französisch", fy:"Friesisch",
-  gl:"Galizisch", ka:"Georgisch", de:"Deutsch", el:"Griechisch",
-  gu:"Gujarati", ht:"Haitianisch", ha:"Hausa", haw:"Hawaiianisch",
-  he:"Hebräisch", hi:"Hindi", hu:"Ungarisch", is:"Isländisch",
-  id:"Indonesisch", ga:"Irisch", it:"Italienisch", ja:"Japanisch",
-  jv:"Javanisch", kn:"Kannada", kk:"Kasachisch", km:"Khmer",
-  ko:"Koreanisch", ku:"Kurdisch", ky:"Kirgisisch", lo:"Laotisch",
-  la:"Latein", lv:"Lettisch", lt:"Litauisch", lb:"Luxemburgisch",
-  mk:"Mazedonisch", mg:"Madagassisch", ms:"Malaiisch", ml:"Malayalam",
-  mt:"Maltesisch", mi:"Maori", mr:"Marathi", mn:"Mongolisch",
-  my:"Burmesisch", ne:"Nepalesisch", no:"Norwegisch", ny:"Nyanja",
-  or:"Odia", ps:"Paschtu", fa:"Persisch", pl:"Polnisch",
-  pt:"Portugiesisch", pa:"Punjabi", ro:"Rumänisch", ru:"Russisch",
-  sm:"Samoanisch", gd:"Schottisch-Gälisch", sr:"Serbisch", st:"Sesotho",
-  sn:"Shona", sd:"Sindhi", si:"Singhalesisch", sk:"Slowakisch",
-  sl:"Slowenisch", so:"Somali", es:"Spanisch", su:"Sundanesisch",
-  sw:"Swahili", sv:"Schwedisch", tl:"Tagalog", tg:"Tadschikisch",
-  ta:"Tamil", te:"Telugu", th:"Thailändisch", tr:"Türkisch",
-  uk:"Ukrainisch", ur:"Urdu", uz:"Usbekisch", vi:"Vietnamesisch",
-  cy:"Walisisch", xh:"Xhosa", yi:"Jiddisch", yo:"Yoruba", zu:"Zulu"
-};
+let lastResult = "";
 
-function loadLanguages(){
-  let select = document.getElementById("lang");
+// 🌍 100+ Sprachen automatisch laden
+async function loadLanguages(){
+  let from = document.getElementById("fromLang");
+  let to = document.getElementById("toLang");
 
-  for(let code in languages){
-    let option = document.createElement("option");
-    option.value = code;
-    option.textContent = languages[code];
-    select.appendChild(option);
+  try{
+    let res = await fetch("https://libretranslate.de/languages");
+    let langs = await res.json();
+
+    langs.forEach(l => {
+      let o1 = document.createElement("option");
+      let o2 = document.createElement("option");
+
+      o1.value = l.code;
+      o1.textContent = l.name;
+
+      o2.value = l.code;
+      o2.textContent = l.name;
+
+      from.appendChild(o1);
+      to.appendChild(o2);
+    });
+
+  }catch(e){
+    document.getElementById("output").innerText =
+      "Sprachen konnten nicht geladen werden";
   }
 }
 
-// 🌍 Übersetzer
+// 🌍 Übersetzen (JETZT beliebig FROM → TO)
 async function translateText(){
   let text = document.getElementById("text").value;
-  let lang = document.getElementById("lang").value;
+  let from = document.getElementById("fromLang").value;
+  let to = document.getElementById("toLang").value;
 
   if(!text){
     document.getElementById("output").innerText = "Bitte Text eingeben";
@@ -137,14 +130,27 @@ async function translateText(){
   }
 
   try{
-    let res = await fetch("https://api.mymemory.translated.net/get?q="
-      + encodeURIComponent(text)
-      + "&langpair=de|" + lang);
+    let chunks = [];
 
-    let data = await res.json();
+    for(let i = 0; i < text.length; i += 400){
+      chunks.push(text.substring(i, i + 400));
+    }
 
-    document.getElementById("output").innerText =
-      data.responseData.translatedText;
+    let result = "";
+
+    for(let chunk of chunks){
+      let res = await fetch(
+        "https://api.mymemory.translated.net/get?q="
+        + encodeURIComponent(chunk)
+        + "&langpair=" + from + "|" + to
+      );
+
+      let data = await res.json();
+      result += data.responseData.translatedText + " ";
+    }
+
+    lastResult = result;
+    document.getElementById("output").innerText = result;
 
   }catch(e){
     document.getElementById("output").innerText =
@@ -152,32 +158,23 @@ async function translateText(){
   }
 }
 
-// 🧠 Vereinfachen
+// 🧠 Vereinfachen (arbeitet auf Ergebnis)
 function simplifyText(){
-  let text = document.getElementById("text").value;
+  let text = lastResult || document.getElementById("text").value;
 
-  if(!text){
-    document.getElementById("output").innerText = "Bitte Text eingeben";
-    return;
-  }
-
-  document.getElementById("output").innerText =
-    text
+  let result = text
     .replace(/kompliziert|schwierig|durchgeführt|implementiert/gi, "gemacht")
     .replace(/Kommunikation/gi, "Austausch")
     .replace(/Transformation/gi, "Veränderung")
     .replace(/andererseits/gi, "aber")
     .replace(/daher|deshalb|somit/gi, "darum");
+
+  document.getElementById("output").innerText = result;
 }
 
-// 🧠 Zusammenfassen
+// 🧠 Zusammenfassen (arbeitet auf Ergebnis)
 function summarizeText(){
-  let text = document.getElementById("text").value;
-
-  if(!text){
-    document.getElementById("output").innerText = "Bitte Text eingeben";
-    return;
-  }
+  let text = lastResult || document.getElementById("text").value;
 
   let sentences = text.split(".").map(s => s.trim()).filter(s => s.length > 10);
 
@@ -192,8 +189,7 @@ function summarizeText(){
     sentences[sentences.length - 1]
   ].join(". ") + ".";
 
-  document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" + summary;
+  document.getElementById("output").innerText = summary;
 }
 
 window.onload = loadLanguages;
