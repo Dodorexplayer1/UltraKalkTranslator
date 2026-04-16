@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator 50 Final</title>
+  <title>Ultra Translator 50 Global</title>
 
-  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <style>
-    body {
+    body{
       margin:0;
       font-family:Arial;
       background:#0f172a;
@@ -19,7 +18,7 @@
       min-height:100vh;
     }
 
-    .card {
+    .card{
       background:#1e293b;
       padding:20px;
       border-radius:15px;
@@ -34,7 +33,6 @@
       padding:10px;
       border-radius:8px;
       border:none;
-      font-size:14px;
     }
 
     button{
@@ -44,13 +42,8 @@
       cursor:pointer;
     }
 
-    .row{
-      display:flex;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    .row button{ flex:1; }
+    .row{display:flex;gap:10px;}
+    .row button{flex:1;}
 
     #output{
       margin-top:15px;
@@ -65,7 +58,6 @@
       position:absolute;
       top:10px;
       right:12px;
-      font-size:22px;
       cursor:pointer;
     }
 
@@ -79,13 +71,9 @@
     }
 
     .menu div{
-      padding:12px;
+      padding:10px;
       cursor:pointer;
       border-bottom:1px solid #1f2937;
-    }
-
-    .menu div:hover{
-      background:#1f2937;
     }
 
     .hidden{display:none;}
@@ -109,13 +97,6 @@
       border-radius:5px;
       margin-bottom:5px;
     }
-
-    #chatInput{
-      width:100%;
-      padding:5px;
-      border-radius:5px;
-      border:none;
-    }
   </style>
 </head>
 
@@ -132,7 +113,7 @@
     <div onclick="openRules()">Regeln</div>
   </div>
 
-  <h2>Ultra Translator 50 Final</h2>
+  <h2>Ultra Translator 50 Global</h2>
 
   <textarea id="text"></textarea>
 
@@ -152,7 +133,7 @@
 <div id="chatBox">
   <b>💬 Tipps</b>
   <div id="chatMessages"></div>
-  <input id="chatInput" placeholder="Tipp schreiben..." />
+  <input id="chatInput" placeholder="Tipp schreiben">
   <button onclick="sendChat()">Senden</button>
 </div>
 
@@ -172,7 +153,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const chatRef = db.collection("chat");
 
-let lastResult="";
+let lastResult = "";
 
 /* 🌍 50 Sprachen */
 const languages = {
@@ -204,52 +185,62 @@ function loadLanguages(){
 /* TRANSLATE */
 async function translateText(){
   let text=document.getElementById("text").value;
+
   let from=document.getElementById("fromLang").value;
   let to=document.getElementById("toLang").value;
 
-  let res=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+from+"|"+to);
+  let res=await fetch(
+    "https://api.mymemory.translated.net/get?q="+
+    encodeURIComponent(text)+
+    "&langpair="+from+"|"+to
+  );
+
   let data=await res.json();
-
-  lastResult=data.responseData.translatedText;
-  document.getElementById("output").innerText=lastResult;
+  lastResult = data.responseData.translatedText;
+  document.getElementById("output").innerText = lastResult;
 }
 
-/* 🔥 STARKE VERSION (NICHT MEHR ANFASSEN) */
+/* 🔥 FIX: VEREINFACHEN (STABIL + NICHT LEER) */
 function simplifyText(){
-  let text=lastResult||document.getElementById("text").value;
+  let text = lastResult || document.getElementById("text").value || "";
 
-  let sentences=text.split(".").map(s=>s.trim()).filter(Boolean);
+  if(!text.trim()){
+    document.getElementById("output").innerText = "Kein Text zum Vereinfachen";
+    return;
+  }
 
-  let result=sentences.map(s=>{
-    let t=s
-      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene/gi,"")
-      .replace(/durchgeführt|implementiert|realisiert|ausgeführt/gi,"gemacht")
-      .replace(/Kommunikation|Interaktion|Korrespondenz/gi,"Austausch")
-      .replace(/Informationen?|Details|Daten|Aspekte/gi,"Infos")
-      .replace(/\s+/g," ")
-      .trim();
+  let result = text
+    .replace(/\b(sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene)\b/gi,"")
+    .replace(/\b(durchgeführt|implementiert|realisiert|ausgeführt)\b/gi,"gemacht")
+    .replace(/\b(Informationen?|Details|Aspekte|Daten)\b/gi,"Infos")
+    .replace(/\s+/g," ")
+    .trim();
 
-    if(t.length>80){
-      t=t.split(",")[0];
-    }
-
-    return t;
-  });
-
-  document.getElementById("output").innerText="VEREINFACHT:\n\n"+result.join(". ");
+  document.getElementById("output").innerText = "VEREINFACHT:\n\n" + result;
 }
 
-/* 🔥 STARKE ZUSAMMENFASSUNG */
+/* 🔥 FIX: ZUSAMMENFASSEN (ECHT KÜRZEN) */
 function summarizeText(){
-  let text=lastResult||document.getElementById("text").value;
+  let text = lastResult || document.getElementById("text").value || "";
 
-  let sentences=text.split(".").map(s=>s.trim()).filter(Boolean);
+  if(!text.trim()){
+    document.getElementById("output").innerText = "Kein Text zum Zusammenfassen";
+    return;
+  }
 
-  let keep=Math.max(1,Math.ceil(sentences.length*0.35));
+  let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
 
-  let summary=sentences.slice(0,keep);
+  if(sentences.length === 0){
+    document.getElementById("output").innerText = "Text zu kurz";
+    return;
+  }
 
-  document.getElementById("output").innerText="ZUSAMMENFASSUNG:\n\n"+summary.join(". ")+".";
+  let keep = Math.max(1, Math.ceil(sentences.length * 0.35));
+
+  let summary = sentences.slice(0, keep).join(". ");
+
+  document.getElementById("output").innerText =
+    "ZUSAMMENFASSUNG:\n\n" + summary + ".";
 }
 
 /* MENU */
@@ -257,23 +248,12 @@ function toggleMenu(){
   document.getElementById("menu").classList.toggle("hidden");
 }
 
-function openSettings(){
-  document.getElementById("output").innerText="⚙️ Settings\nzukünftige Updates";
-}
+function openSettings(){ document.getElementById("output").innerText="Settings"; }
+function openLogin(){ document.getElementById("output").innerText="Login"; }
+function openSupport(){ document.getElementById("output").innerText="Support"; }
+function openRules(){ document.getElementById("output").innerText="Regeln"; }
 
-function openLogin(){
-  document.getElementById("output").innerText="Login";
-}
-
-function openSupport(){
-  document.getElementById("output").innerText="Support";
-}
-
-function openRules(){
-  document.getElementById("output").innerText="Regeln";
-}
-
-/* GLOBAL CHAT */
+/* CHAT */
 function sendChat(){
   let msg=document.getElementById("chatInput").value;
   if(!msg) return;
@@ -286,16 +266,19 @@ function loadChat(){
   chatRef.orderBy("time").onSnapshot(snapshot=>{
     let box=document.getElementById("chatMessages");
     box.innerHTML="";
+
     snapshot.forEach(doc=>{
       let div=document.createElement("div");
       div.innerText="💡 "+doc.data().text;
       box.appendChild(div);
     });
-    box.scrollTop=box.scrollHeight;
+
+    box.scrollTop = box.scrollHeight;
   });
 }
 
-document.addEventListener("DOMContentLoaded",function(){
+/* INIT */
+document.addEventListener("DOMContentLoaded",()=>{
   loadLanguages();
   loadChat();
 });
