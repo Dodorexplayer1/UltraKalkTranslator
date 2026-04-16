@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator AI Pro</title>
+  <title>Ultra Translator B - Big Languages</title>
 
   <style>
     body {
@@ -68,7 +68,7 @@
 <body>
 
 <div class="card">
-  <h2>Ultra Translator AI Pro</h2>
+  <h2>Ultra Translator B (Big Languages)</h2>
 
   <textarea id="text" placeholder="Text eingeben"></textarea>
 
@@ -89,32 +89,42 @@
 
 let lastResult = "";
 
-// 🌍 FIXE 100+ SPRACHLISTE (KEINE API MEHR)
+/* 🌍 GROßE FESTE SPRACHLISTE (100+ realistisch erweitert) */
 const languages = {
   af:"Afrikaans", sq:"Albanisch", am:"Amharisch", ar:"Arabisch",
   hy:"Armenisch", az:"Aserbaidschanisch", eu:"Baskisch", be:"Belarussisch",
   bn:"Bengalisch", bs:"Bosnisch", bg:"Bulgarisch", ca:"Katalanisch",
-  ceb:"Cebuano", zh:"Chinesisch", hr:"Kroatisch", cs:"Tschechisch",
-  da:"Dänisch", nl:"Niederländisch", en:"Englisch", eo:"Esperanto",
-  et:"Estnisch", fi:"Finnisch", fr:"Französisch", fy:"Friesisch",
-  gl:"Galizisch", ka:"Georgisch", de:"Deutsch", el:"Griechisch",
-  gu:"Gujarati", ht:"Haitianisch", ha:"Hausa", he:"Hebräisch",
-  hi:"Hindi", hu:"Ungarisch", is:"Isländisch", id:"Indonesisch",
-  it:"Italienisch", ja:"Japanisch", ko:"Koreanisch", lv:"Lettisch",
-  lt:"Litauisch", no:"Norwegisch", pl:"Polnisch", pt:"Portugiesisch",
-  ro:"Rumänisch", ru:"Russisch", sk:"Slowakisch", sl:"Slowenisch",
-  es:"Spanisch", sv:"Schwedisch", th:"Thailändisch", tr:"Türkisch",
-  uk:"Ukrainisch", vi:"Vietnamesisch", fa:"Persisch", ur:"Urdu",
-  ta:"Tamil", te:"Telugu", ml:"Malayalam", kn:"Kannada",
-  pa:"Punjabi", mr:"Marathi", ne:"Nepalesisch", si:"Singhalesisch",
-  my:"Burmesisch", km:"Khmer", lo:"Laotisch", mn:"Mongolisch",
-  sw:"Swahili", zu:"Zulu", xh:"Xhosa", yo:"Yoruba"
+  ceb:"Cebuano", ny:"Chichewa", zh:"Chinesisch", co:"Korsisch",
+  hr:"Kroatisch", cs:"Tschechisch", da:"Dänisch", nl:"Niederländisch",
+  en:"Englisch", eo:"Esperanto", et:"Estnisch", fi:"Finnisch",
+  fr:"Französisch", fy:"Friesisch", gl:"Galizisch", ka:"Georgisch",
+  de:"Deutsch", el:"Griechisch", gu:"Gujarati", ht:"Haitianisch",
+  ha:"Hausa", haw:"Hawaiianisch", he:"Hebräisch", hi:"Hindi",
+  hu:"Ungarisch", is:"Isländisch", id:"Indonesisch", ga:"Irisch",
+  it:"Italienisch", ja:"Japanisch", jw:"Javanisch", kn:"Kannada",
+  kk:"Kasachisch", km:"Khmer", ko:"Koreanisch", ku:"Kurdisch",
+  ky:"Kirgisisch", lo:"Laotisch", la:"Latein", lv:"Lettisch",
+  lt:"Litauisch", lb:"Luxemburgisch", mk:"Mazedonisch", mg:"Madagassisch",
+  ms:"Malaiisch", ml:"Malayalam", mt:"Maltesisch", mi:"Maori",
+  mr:"Marathi", mn:"Mongolisch", my:"Burmesisch", ne:"Nepalesisch",
+  no:"Norwegisch", ps:"Paschtu", fa:"Persisch", pl:"Polnisch",
+  pt:"Portugiesisch", pa:"Punjabi", ro:"Rumänisch", ru:"Russisch",
+  sm:"Samoanisch", gd:"Schottisch-Gälisch", sr:"Serbisch", st:"Sesotho",
+  sn:"Shona", sd:"Sindhi", si:"Singhalesisch", sk:"Slowakisch",
+  sl:"Slowenisch", so:"Somali", es:"Spanisch", su:"Sundanesisch",
+  sw:"Swahili", sv:"Schwedisch", tl:"Tagalog", tg:"Tadschikisch",
+  ta:"Tamil", te:"Telugu", th:"Thailändisch", tr:"Türkisch",
+  uk:"Ukrainisch", ur:"Urdu", uz:"Usbekisch", vi:"Vietnamesisch",
+  cy:"Walisisch", xh:"Xhosa", yi:"Jiddisch", yo:"Yoruba", zu:"Zulu"
 };
 
-// 🟢 Sprache laden (lokal, stabil)
+/* 🌍 LOAD */
 function loadLanguages(){
   let from = document.getElementById("fromLang");
   let to = document.getElementById("toLang");
+
+  from.innerHTML = "";
+  to.innerHTML = "";
 
   for(let code in languages){
     let o1 = document.createElement("option");
@@ -131,7 +141,7 @@ function loadLanguages(){
   }
 }
 
-// 🌍 Übersetzen (jede Sprache → jede Sprache)
+/* 🌍 TRANSLATE */
 async function translateText(){
   let text = document.getElementById("text").value;
   let from = document.getElementById("fromLang").value;
@@ -161,24 +171,32 @@ async function translateText(){
   }
 }
 
-// 🧠 Vereinfachen
+/* 🧠 Vereinfachen */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value;
 
   document.getElementById("output").innerText =
-    text
-    .replace(/kompliziert|schwierig/gi, "einfach")
-    .replace(/Kommunikation/gi, "Austausch")
-    .replace(/Transformation/gi, "Veränderung");
+    text.replace(/kompliziert|schwierig|durchgeführt|implementiert/gi,"gemacht")
+        .replace(/Kommunikation/gi,"Austausch")
+        .replace(/Transformation/gi,"Veränderung")
+        .replace(/andererseits|daher|deshalb/gi,"aber");
 }
 
-// 🧠 Zusammenfassen
+/* 🧠 Zusammenfassen */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value;
 
   let sentences = text.split(".").filter(s => s.trim().length > 10);
 
-  let summary = sentences.slice(0, 2).join(". ") + ".";
+  if(sentences.length <= 2){
+    document.getElementById("output").innerText = text;
+    return;
+  }
+
+  let summary =
+    sentences[0] + ". " +
+    sentences[Math.floor(sentences.length/2)] + ". " +
+    sentences[sentences.length-1] + ".";
 
   document.getElementById("output").innerText = summary;
 }
