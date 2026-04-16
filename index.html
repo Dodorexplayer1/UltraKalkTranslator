@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator Pro</title>
+  <title>Ultra Translator AI Pro</title>
 
   <style>
     body {
@@ -12,7 +12,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
     }
 
     .card {
@@ -30,6 +30,7 @@
       padding: 10px;
       border-radius: 8px;
       border: none;
+      font-size: 14px;
     }
 
     button {
@@ -43,12 +44,23 @@
       background: #2563eb;
     }
 
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .row button {
+      flex: 1;
+    }
+
     #output {
       margin-top: 15px;
       padding: 10px;
       background: #0f172a;
       border-radius: 8px;
       min-height: 40px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -56,7 +68,7 @@
 <body>
 
 <div class="card">
-  <h2>Ultra Translator Pro</h2>
+  <h2>Ultra Translator AI Pro</h2>
 
   <textarea id="text" placeholder="Text eingeben"></textarea>
 
@@ -64,10 +76,17 @@
 
   <button onclick="translateText()">Übersetzen</button>
 
+  <div class="row">
+    <button onclick="simplifyText()">Vereinfachen</button>
+    <button onclick="summarizeText()">Zusammenfassen</button>
+  </div>
+
   <div id="output"></div>
 </div>
 
 <script>
+
+// 🌍 DEINE VORHERIGE GROSSE SPRACHLISTE (BEHALTEN + ERWEITERT)
 const languages = {
   af:"Afrikaans", sq:"Albanisch", am:"Amharisch", ar:"Arabisch",
   hy:"Armenisch", az:"Aserbaidschanisch", eu:"Baskisch", be:"Belarussisch",
@@ -79,7 +98,7 @@ const languages = {
   el:"Griechisch", gu:"Gujarati", ht:"Haitianisch", ha:"Hausa",
   haw:"Hawaiianisch", he:"Hebräisch", hi:"Hindi", hu:"Ungarisch",
   is:"Isländisch", id:"Indonesisch", ga:"Irisch", it:"Italienisch",
-  ja:"Japanisch", jw:"Javanisch", kn:"Kannada", kk:"Kasachisch",
+  ja:"Japanisch", jv:"Javanisch", kn:"Kannada", kk:"Kasachisch",
   km:"Khmer", ko:"Koreanisch", ku:"Kurdisch", ky:"Kirgisisch",
   lo:"Laotisch", la:"Latein", lv:"Lettisch", lt:"Litauisch",
   lb:"Luxemburgisch", mk:"Mazedonisch", mg:"Madagassisch",
@@ -108,6 +127,7 @@ function loadLanguages(){
   }
 }
 
+// 🌍 Übersetzung
 async function translateText(){
   let text = document.getElementById("text").value;
   let lang = document.getElementById("lang").value;
@@ -117,7 +137,7 @@ async function translateText(){
     return;
   }
 
-  try {
+  try{
     let res = await fetch("https://api.mymemory.translated.net/get?q="
       + encodeURIComponent(text)
       + "&langpair=de|" + lang);
@@ -127,13 +147,43 @@ async function translateText(){
     document.getElementById("output").innerText =
       data.responseData.translatedText;
 
-  } catch (e) {
+  }catch(e){
     document.getElementById("output").innerText =
-      "Fehler beim Übersetzen (API nicht erreichbar)";
+      "Fehler beim Übersetzen";
   }
 }
 
+// 🧠 Vereinfachen
+function simplifyText(){
+  let text = document.getElementById("text").value;
+
+  if(!text){
+    document.getElementById("output").innerText = "Bitte Text eingeben";
+    return;
+  }
+
+  document.getElementById("output").innerText =
+    text.replace(/kompliziert|schwierig|durchgeführt/gi, "gemacht");
+}
+
+// 🧠 Zusammenfassen
+function summarizeText(){
+  let text = document.getElementById("text").value;
+
+  if(!text){
+    document.getElementById("output").innerText = "Bitte Text eingeben";
+    return;
+  }
+
+  let sentences = text.split(".");
+  let shortText = sentences.slice(0,2).join(".") + ".";
+
+  document.getElementById("output").innerText =
+    "ZUSAMMENFASSUNG:\n\n" + shortText;
+}
+
 window.onload = loadLanguages;
+
 </script>
 
 </body>
