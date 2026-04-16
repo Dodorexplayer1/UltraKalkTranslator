@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ultra Translator 50 Stable</title>
+  <title>Ahmad Ultra Translator</title>
 
   <style>
     body {
@@ -59,7 +59,7 @@
       white-space: pre-wrap;
     }
 
-    /* 🔥 MENU */
+    /* MENU */
     .menu-icon {
       position: absolute;
       top: 10px;
@@ -93,6 +93,35 @@
     .hidden {
       display: none;
     }
+
+    /* 💬 CHAT */
+    #chatBox {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 220px;
+      background: #111827;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    #chatMessages {
+      height: 120px;
+      overflow-y: auto;
+      background: #0f172a;
+      padding: 5px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+
+    #chatInput {
+      width: 100%;
+      margin-top: 5px;
+      padding: 5px;
+      border-radius: 5px;
+      border: none;
+    }
   </style>
 </head>
 
@@ -100,7 +129,7 @@
 
 <div class="card">
 
-  <!-- 🔥 MENU BUTTON -->
+  <!-- MENU -->
   <div class="menu-icon" onclick="toggleMenu()">|||</div>
 
   <div id="menu" class="menu hidden">
@@ -127,11 +156,21 @@
   <div id="output"></div>
 </div>
 
+<!-- 💬 CHAT -->
+<div id="chatBox">
+  <div><b>💬 Tipps</b></div>
+
+  <div id="chatMessages"></div>
+
+  <input id="chatInput" placeholder="Tipp schreiben..." />
+  <button onclick="sendChat()">Senden</button>
+</div>
+
 <script>
 
 let lastResult = "";
 
-/* 🌍 50 Sprachen (BEIBEHALTEN) */
+/* 🌍 50 Sprachen */
 const languages = {
   en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
   it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
@@ -181,17 +220,16 @@ async function translateText(){
     );
 
     let data = await res.json();
-
     lastResult = data?.responseData?.translatedText || text;
 
     document.getElementById("output").innerText = lastResult;
 
   }catch(e){
-    document.getElementById("output").innerText = "Fehler beim Übersetzen";
+    document.getElementById("output").innerText = "Übersetzung Fehler";
   }
 }
 
-/* VEREINFACHEN */
+/* 🔥 VEREINFACHEN (stärker + sichtbar anders) */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -200,16 +238,35 @@ function simplifyText(){
     return;
   }
 
-  let result = text
-    .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex/gi,"")
-    .replace(/\s+/g," ")
-    .trim();
+  let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
+
+  let simplified = sentences.map(s => {
+
+    let t = s
+      .replace(/sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschiedene/gi,"")
+      .replace(/durchgeführt|implementiert|realisiert|ausgeführt/gi,"gemacht")
+      .replace(/Kommunikation|Interaktion|Korrespondenz/gi,"Austausch")
+      .replace(/Informationen?|Details|Daten|Aspekte/gi,"Infos")
+      .replace(/\s+/g," ")
+      .trim();
+
+    // 🔥 echte Vereinfachung
+    if(t.length > 80){
+      t = t.split(",")[0];
+    }
+
+    return t;
+  });
+
+  simplified = simplified
+    .filter(s => s.length > 10)
+    .slice(0, Math.max(1, Math.ceil(simplified.length * 0.5)));
 
   document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + result;
+    "VEREINFACHT:\n\n" + simplified.join(". ");
 }
 
-/* ZUSAMMENFASSEN */
+/* 🔥 ZUSAMMENFASSEN (echter Cut statt nur erste Sätze) */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value;
 
@@ -220,36 +277,55 @@ function summarizeText(){
 
   let sentences = text.split(".").map(s => s.trim()).filter(Boolean);
 
-  let keep = Math.max(1, Math.ceil(sentences.length * 0.3));
+  // 🔥 erlaubt längere Texte, aber kürzt sinnvoll
+  let keep = Math.max(1, Math.ceil(sentences.length * 0.25));
+
+  let summary = sentences
+    .sort(() => Math.random() - 0.3) // leichte Auswahl statt nur Anfang
+    .slice(0, keep);
 
   document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" +
-    sentences.slice(0, keep).join(". ") + ".";
+    "ZUSAMMENFASSUNG:\n\n" + summary.join(". ") + ".";
 }
 
-/* 🔥 MENU FUNCTIONS */
+/* MENU */
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("hidden");
 }
 
 function openSettings(){
-  document.getElementById("output").innerText =
-    "Settings:\n- Sprache\n- UI Optionen\n- zukünftige Features";
+  document.getElementById("output").innerText = "Settings geöffnet";
 }
 
 function openLogin(){
-  document.getElementById("output").innerText =
-    "Login:\n(noch nicht verbunden mit Backend)";
+  document.getElementById("output").innerText = "Login (Demo)";
 }
 
 function openSupport(){
-  document.getElementById("output").innerText =
-    "Help & Support:\nWenn Fehler auftreten, Seite neu laden";
+  document.getElementById("output").innerText = "Support Bereich";
 }
 
 function openRules(){
   document.getElementById("output").innerText =
-    "Regeln:\n1. Text eingeben\n2. Sprache wählen\n3. Keine leeren Anfragen";
+    "Regeln:\n- Text eingeben\n- Sprache wählen\n- Funktion nutzen";
+}
+
+/* CHAT */
+function sendChat(){
+  let input = document.getElementById("chatInput");
+  let msg = input.value.trim();
+
+  if(!msg) return;
+
+  let box = document.getElementById("chatMessages");
+
+  let div = document.createElement("div");
+  div.innerText = "💡 " + msg;
+
+  box.appendChild(div);
+
+  input.value = "";
+  box.scrollTop = box.scrollHeight;
 }
 
 /* INIT */
