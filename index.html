@@ -80,7 +80,7 @@
     .row{display:flex;gap:10px;}
     .row button{flex:1;}
 
-    /* CHAT FIX */
+    /* CHAT */
     #chatBox{
       position:fixed;
       bottom:140px;
@@ -88,7 +88,6 @@
       width:260px;
       height:260px;
       overflow-y:auto;
-      overflow-x:hidden;
       background:#111827;
       padding:10px;
       border-radius:10px;
@@ -146,10 +145,10 @@
       white-space:pre-line;
     }
 
-    /* ✅ FIX: Upload Button UNTEN MITTE */
+    /* ✅ Upload Button FIX (nicht ganz unten) */
     #uploadTop{
       position:fixed;
-      bottom:20px;
+      bottom:85px;   /* 👈 Abstand nach oben FIX */
       left:50%;
       transform:translateX(-50%);
       z-index:999;
@@ -207,7 +206,7 @@
     <div id="menuInfo"></div>
   </div>
 
-  <!-- ✅ Upload Button jetzt unten MITTE -->
+  <!-- UPLOAD BUTTON -->
   <div id="uploadTop">
     <button onclick="imagePanel.style.display='block'">+ Upload Image</button>
   </div>
@@ -304,12 +303,12 @@ function toggleMenu(){
   menu.style.display = menu.style.display==="block"?"none":"block";
 }
 
-/* 💬 CHAT FIX (SCROLL 100% STABLE) */
+/* 💬 CHAT FIX (100% AUTO SCROLL) */
 function loadChat(){
   chatRef.orderBy("time","asc").onSnapshot(s=>{
 
     const atBottom =
-      chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 40;
+      chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 50;
 
     chatBox.innerHTML="";
 
@@ -335,8 +334,8 @@ function loadChat(){
 
 function toggleChat(){
   const open = chatBox.style.display==="block";
-  chatBox.style.display = open?"none":"block";
-  chatInputBox.style.display = open?"none":"block";
+  chatBox.style.display=open?"none":"block";
+  chatInputBox.style.display=open?"none":"block";
 
   requestAnimationFrame(()=>{
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -355,7 +354,7 @@ function sendChat(){
   chatInput.value="";
 }
 
-/* 🖼 IMAGE */
+/* IMAGE */
 function uploadImage(){
   const file=imgUpload.files[0];
   if(!file) return;
@@ -403,7 +402,6 @@ async function translateText(){
   output.innerText=lastTranslated;
 }
 
-/* FIXED TEXT FUNCTIONS */
 function simplifyText(){
   const base=lastTranslated||text.value;
   output.innerText=base.split(".")[0];
