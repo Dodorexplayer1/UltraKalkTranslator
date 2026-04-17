@@ -16,6 +16,7 @@
       color:white;
     }
 
+    /* LOGIN */
     #loginScreen{
       position:fixed;
       inset:0;
@@ -47,6 +48,9 @@
       cursor:pointer;
     }
 
+    hr{opacity:0.3;}
+
+    /* APP */
     #app{display:none;padding:20px;}
 
     textarea,select{
@@ -79,10 +83,10 @@
     .row{display:flex;gap:10px;}
     .row button{flex:1;}
 
-    /* CHAT */
+    /* CHAT BOX */
     #chatBox{
       position:fixed;
-      bottom:120px;
+      bottom:140px;
       right:10px;
       width:250px;
       max-height:250px;
@@ -90,6 +94,27 @@
       background:#111827;
       padding:10px;
       border-radius:10px;
+      display:none;
+    }
+
+    #chatInputBox{
+      position:fixed;
+      bottom:70px;
+      right:10px;
+      width:250px;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      display:none;
+    }
+
+    #chatInput{
+      width:100%;
+      padding:8px;
+      border-radius:8px;
+      border:none;
+      background:#0f172a;
+      color:white;
     }
 
     #chatToggle{
@@ -107,26 +132,7 @@
       font-size:22px;
     }
 
-    /* CHAT INPUT BOX */
-    #chatInputBox{
-      position:fixed;
-      bottom:70px;
-      right:10px;
-      width:250px;
-      background:#111827;
-      padding:10px;
-      border-radius:10px;
-    }
-
-    #chatInput{
-      width:100%;
-      padding:8px;
-      border-radius:8px;
-      border:none;
-      background:#0f172a;
-      color:white;
-    }
-
+    /* MENU */
     #menuBtn{
       position:fixed;
       top:10px;
@@ -145,6 +151,7 @@
       display:none;
     }
 
+    /* CHAT INFO */
     #chatInfo{
       position:fixed;
       top:10px;
@@ -172,7 +179,7 @@
     <button onclick="login()">Login</button>
     <button onclick="register()">Registrieren</button>
 
-    <hr style="opacity:0.3;">
+    <hr>
 
     <input id="guestName" placeholder="Username für Gast">
     <button onclick="guestLogin()">Als Gast fortfahren</button>
@@ -239,6 +246,7 @@ const chatRef = db.collection("chat");
 let isGuest=false;
 let guestUser="";
 let messageCount=0;
+let chatOpen=false;
 
 /* AUTH */
 function login(){
@@ -278,6 +286,10 @@ auth.onAuthStateChanged(user=>{
   if(user || isGuest){
     loginScreen.style.display="none";
     app.style.display="block";
+
+    document.getElementById("chatBox").style.display="none";
+    document.getElementById("chatInputBox").style.display="none";
+
     loadChat();
   }else{
     loginScreen.style.display="flex";
@@ -291,7 +303,23 @@ function toggleMenu(){
   m.style.display=m.style.display==="none"?"block":"none";
 }
 
-/* CHAT LIVE */
+/* CHAT TOGGLE FIX */
+function toggleChat(){
+  chatOpen=!chatOpen;
+
+  const box=document.getElementById("chatBox");
+  const input=document.getElementById("chatInputBox");
+
+  if(chatOpen){
+    box.style.display="block";
+    input.style.display="block";
+  }else{
+    box.style.display="none";
+    input.style.display="none";
+  }
+}
+
+/* CHAT LOAD */
 function loadChat(){
   chatRef.orderBy("time").onSnapshot(snap=>{
     const box=document.getElementById("chatBox");
@@ -311,6 +339,7 @@ function loadChat(){
   });
 }
 
+/* CHAT INFO */
 function updateChatInfo(){
   const info=document.getElementById("chatInfo");
 
@@ -322,7 +351,7 @@ function updateChatInfo(){
     "<br>⏱ Reset: "+reset.toLocaleTimeString();
 }
 
-/* CHAT SEND */
+/* CHAT SEND FIX */
 function sendChat(){
   const msg=document.getElementById("chatInput").value;
   if(!msg.trim()) return;
@@ -342,12 +371,6 @@ function sendChat(){
   });
 
   document.getElementById("chatInput").value="";
-}
-
-/* CHAT TOGGLE */
-function toggleChat(){
-  const box=document.getElementById("chatBox");
-  box.style.display=box.style.display==="none"?"block":"none";
 }
 
 /* TRANSLATE FIX */
