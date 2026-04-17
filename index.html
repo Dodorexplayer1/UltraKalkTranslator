@@ -17,7 +17,7 @@
       color:white;
     }
 
-    /* LOGIN SCREEN */
+    /* AUTH SCREEN */
     #loginScreen{
       position:fixed;
       inset:0;
@@ -27,7 +27,7 @@
       align-items:center;
     }
 
-    .loginBox{
+    .box{
       background:#111827;
       padding:20px;
       border-radius:12px;
@@ -47,6 +47,14 @@
       color:white;
       font-weight:bold;
       cursor:pointer;
+    }
+
+    p{
+      text-align:center;
+      margin-top:10px;
+      cursor:pointer;
+      font-size:12px;
+      color:#cbd5e1;
     }
 
     /* APP */
@@ -126,16 +134,21 @@
 
 <body>
 
-<!-- 🔐 LOGIN -->
+<!-- 🔐 AUTH -->
 <div id="loginScreen">
-  <div class="loginBox">
-    <h3>Login</h3>
+  <div class="box">
+
+    <h3 id="title">Anmelden</h3>
 
     <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Passwort">
+    <input id="password" type="password" placeholder="Passwort (min 6 Zeichen)">
 
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Account erstellen</button>
+    <button onclick="submitAuth()" id="authBtn">Anmelden</button>
+
+    <p onclick="toggleMode()" id="switchText">
+      Noch kein Konto? Registrieren
+    </p>
+
   </div>
 </div>
 
@@ -187,22 +200,36 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const chatRef = db.collection("chat");
 
+let isLogin = true;
 let lastResult = "";
 
-/* AUTH */
-function register(){
-  auth.createUserWithEmailAndPassword(email.value,password.value)
-    .then(()=>alert("Account erstellt"))
-    .catch(e=>alert(e.message));
+/* AUTH SWITCH */
+function toggleMode(){
+  isLogin = !isLogin;
+
+  if(isLogin){
+    title.innerText="Anmelden";
+    authBtn.innerText="Anmelden";
+    switchText.innerText="Noch kein Konto? Registrieren";
+  }else{
+    title.innerText="Registrieren";
+    authBtn.innerText="Konto erstellen";
+    switchText.innerText="Schon ein Konto? Anmelden";
+  }
 }
 
-function login(){
-  auth.signInWithEmailAndPassword(email.value,password.value)
-    .catch(e=>alert(e.message));
-}
+/* AUTH ACTION */
+function submitAuth(){
+  const mail=email.value;
+  const pass=password.value;
 
-function logout(){
-  auth.signOut();
+  if(isLogin){
+    auth.signInWithEmailAndPassword(mail,pass)
+      .catch(e=>alert(e.message));
+  }else{
+    auth.createUserWithEmailAndPassword(mail,pass)
+      .catch(e=>alert(e.message));
+  }
 }
 
 /* STATE */
@@ -216,6 +243,11 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
+/* LOGOUT */
+function logout(){
+  auth.signOut();
+}
+
 /* CHAT */
 function toggleChat(){
   let box=document.getElementById("chatBox");
@@ -223,7 +255,7 @@ function toggleChat(){
 }
 
 function sendChat(){
-  let msg=document.getElementById("chatInput").value;
+  let msg=chatInput.value;
   if(!msg) return;
 
   chatRef.add({
@@ -261,7 +293,7 @@ function summarizeText(){
   output.innerText="ZUSAMMENFASSUNG:\n\n"+text.slice(0,120)+"...";
 }
 
-/* INIT LANGUAGES */
+/* LANGUAGES */
 const languages={
   en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",
   it:"Italienisch",pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",
