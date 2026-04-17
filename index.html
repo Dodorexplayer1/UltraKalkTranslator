@@ -150,8 +150,8 @@
     #imagePanel{
       display:none;
       margin-top:20px;
-      background:#111827;
       padding:10px;
+      background:#111827;
       border-radius:10px;
     }
 
@@ -159,6 +159,14 @@
       width:100%;
       margin-top:10px;
       border-radius:8px;
+    }
+
+    #uploadTop{
+      position:fixed;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:999;
     }
   </style>
 </head>
@@ -199,6 +207,10 @@
     <button onclick="logout()">Logout</button>
   </div>
 
+  <div id="uploadTop">
+    <button onclick="askImageCode()">+ Upload Image</button>
+  </div>
+
   <h2>Ultra Translator 50 Global</h2>
 
   <textarea id="text"></textarea>
@@ -215,10 +227,9 @@
 
   <div id="output"></div>
 
-  <!-- IMAGE -->
   <div id="imagePanel">
     <input type="file" id="imgUpload">
-    <button onclick="uploadImage()">Upload (Code nötig)</button>
+    <button onclick="uploadImage()">Upload</button>
     <div id="gallery"></div>
   </div>
 
@@ -238,9 +249,9 @@
 
 /* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyAjS5W-l2Hm_iBSq4_az2WReQwY4ZmEweU",
-  authDomain: "projekt-erstellen-dfc13.firebaseapp.com",
-  projectId: "projekt-erstellen-dfc13"
+  apiKey:"AIzaSyAjS5W-l2Hm_iBSq4_az2WReQwY4ZmEweU",
+  authDomain:"projekt-erstellen-dfc13.firebaseapp.com",
+  projectId:"projekt-erstellen-dfc13"
 });
 
 const auth = firebase.auth();
@@ -255,6 +266,7 @@ let guestUser="";
 let currentUsername="";
 let chatOpen=false;
 let chatUnlocked=false;
+let imageUnlocked=false;
 
 let lastTranslated="";
 let translationHistory=[];
@@ -262,7 +274,7 @@ let translationHistory=[];
 const CHAT_CODE="$01$";
 const IMAGE_CODE="IloveCodeGeass";
 
-/* ENTER APP */
+/* ENTER */
 function enterApp(){
   loginScreen.style.display="none";
   app.style.display="block";
@@ -352,6 +364,44 @@ function sendChat(){
   chatInput.value="";
 }
 
+/* IMAGE CODE */
+function askImageCode(){
+  const c=prompt("Image Code?");
+  if(c===IMAGE_CODE){
+    imageUnlocked=true;
+    imagePanel.style.display="block";
+    loadImages();
+  }
+}
+
+function uploadImage(){
+  if(!imageUnlocked) return;
+
+  const file=imgUpload.files[0];
+  const r=new FileReader();
+
+  r.onload=()=>{
+    imgRef.add({
+      img:r.result,
+      user:currentUsername||guestUser,
+      time:Date.now()
+    });
+  };
+
+  r.readAsDataURL(file);
+}
+
+function loadImages(){
+  imgRef.orderBy("time","desc").onSnapshot(s=>{
+    gallery.innerHTML="";
+    s.forEach(d=>{
+      let img=document.createElement("img");
+      img.src=d.data().img;
+      gallery.appendChild(img);
+    });
+  });
+}
+
 /* TRANSLATE */
 async function translateText(){
   const res=await fetch(
@@ -360,10 +410,10 @@ async function translateText(){
 
   const data=await res.json();
   lastTranslated=data.responseData.translatedText;
-
   output.innerText=lastTranslated;
 }
 
+/* FIX TEXT */
 function simplifyText(){
   output.innerText="SIMPLIFIED:\n"+(lastTranslated||text.value).split(".")[0];
 }
@@ -373,24 +423,30 @@ function summarizeText(){
 }
 
 /* MENU INFO */
-function openInfo(){
-  output.innerText="System OK\nChat + Translate Active";
-}
+setInterval(()=>{
+  const now=new Date();
+  const r=new Date();
+  r.setHours(24,0,0,0);
 
-function openSettings(){
-  output.innerText="Settings";
-}
-
-function openHelp(){
-  output.innerText="Help & Support";
-}
+  menuInfo.innerText=
+  `Reset: ${Math.floor((r-now)/3600000)}h
+Recent: ${translationHistory[0]?.from||"none"}`;
+},1000);
 
 /* LANGS */
-const langs={en:"EN",de:"DE",fr:"FR",es:"ES",it:"IT"};
+const languages={
+en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch",
+pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",ja:"Japanisch",ko:"Koreanisch",
+ar:"Arabisch",hi:"Hindi",tr:"Türkisch",nl:"Niederländisch",pl:"Polnisch",
+uk:"Ukrainisch",sv:"Schwedisch",da:"Dänisch",fi:"Finnisch",no:"Norwegisch",
+cs:"Tschechisch",ro:"Rumänisch",hu:"Ungarisch",he:"Hebräisch",th:"Thailändisch",
+vi:"Vietnamesisch",id:"Indonesisch",ms:"Malaiisch",tl:"Filipino",
+sw:"Swahili",ta:"Tamil",te:"Telugu",ml:"Malayalam",kn:"Kannada"
+};
 
-for(let l in langs){
-  fromLang.add(new Option(langs[l],l));
-  toLang.add(new Option(langs[l],l));
+for(let l in languages){
+  fromLang.add(new Option(languages[l],l));
+  toLang.add(new Option(languages[l],l));
 }
 
 </script>
