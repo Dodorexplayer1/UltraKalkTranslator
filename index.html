@@ -1,401 +1,324 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Ultra Translator 50 Global FIX</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
-
-#loginScreen{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-}
-
-.box{
-  background:#111827;
-  padding:20px;
-  border-radius:12px;
-  width:300px;
-}
-
-input,button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-}
-
-button{
-  background:#3b82f6;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-#app{display:none;padding:20px;}
-
-textarea,select{
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-}
-
-textarea{
-  min-height:90px;
-  background:#111827;
-  color:white;
-}
-
-select{
-  background:#111827;
-  color:white;
-}
-
-#output{
-  margin-top:10px;
-  padding:10px;
-  background:#111827;
-  border-radius:8px;
-  min-height:60px;
-  white-space:pre-line;
-}
-
-/* CHAT */
-#chatBox{
-  position:fixed;
-  bottom:140px;
-  right:10px;
-  width:250px;
-  max-height:250px;
-  overflow-y:auto;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-}
-
-#chatInputBox{
-  position:fixed;
-  bottom:70px;
-  right:10px;
-  width:250px;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-}
-
-#chatToggle{
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:#3b82f6;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
-  font-size:22px;
-}
-
-/* MENU */
-#menuBtn{
-  position:fixed;
-  top:10px;
-  right:10px;
-  cursor:pointer;
-  font-size:22px;
-}
-
-#menu{
-  position:fixed;
-  top:40px;
-  right:10px;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-  width:240px;
-}
-
-/* + BUTTON */
-#secretPlus{
-  position:fixed;
-  top:6px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:22px;
-  cursor:pointer;
-  z-index:9999;
-  opacity:0.7;
-}
-
-/* IMAGE */
-#imagePanel{
-  position:fixed;
-  top:60px;
-  left:10px;
-  width:220px;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-  max-height:300px;
-  overflow:auto;
-}
-
-#gallery img{
-  width:100%;
-  margin-top:5px;
-  border-radius:6px;
-}
-
-</style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="loginScreen">
-  <div class="box">
-    <h3>Login</h3>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Passwort">
-    <input id="username" placeholder="Username">
-
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Registrieren</button>
-
-    <hr>
-
-    <input id="guestName" placeholder="Gast Username">
-    <button onclick="guestLogin()">Gast</button>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
-
-  <div id="menuBtn" onclick="toggleMenu()">|||</div>
-
-  <div id="menu">
-    <button onclick="openInfo()">Info</button>
-    <button onclick="openSettings()">Settings</button>
-    <button onclick="logout()">Logout</button>
-  </div>
-
-  <h2>Ultra Translator FIX</h2>
-
-  <textarea id="text"></textarea>
-
-  <select id="fromLang"></select>
-  <select id="toLang"></select>
-
-  <button onclick="translateText()">Translate</button>
-
-  <button onclick="simplifyText()">Simplify</button>
-  <button onclick="summarizeText()">Summarize</button>
-
-  <div id="output"></div>
-</div>
-
-<!-- CHAT -->
-<div id="chatBox"></div>
-<div id="chatInputBox">
-  <input id="chatInput" placeholder="Message">
-  <button onclick="sendChat()">Send</button>
-</div>
-
-<div id="chatToggle" onclick="toggleChat()">💬</div>
-
-<!-- + BUTTON -->
-<div id="secretPlus" onclick="askImageCode()">+</div>
-
-<!-- IMAGES -->
-<div id="imagePanel">
-  <input type="file" id="imgUpload" onchange="uploadImage()">
-  <div id="gallery"></div>
-</div>
-
 <script>
 
+/* FIREBASE */
 const firebaseConfig = {
-  apiKey:"AIzaSy...",
-  authDomain:"projekt-erstellen-dfc13.firebaseapp.com",
-  projectId:"projekt-erstellen-dfc13"
+  apiKey: "AIzaSyAjS5W-l2Hm_iBSq4_az2WReQwY4ZmEweU",
+  authDomain: "projekt-erstellen-dfc13.firebaseapp.com",
+  projectId: "projekt-erstellen-dfc13",
+  storageBucket: "projekt-erstellen-dfc13.firebasestorage.app",
+  messagingSenderId: "1040865035180",
+  appId: "1:1040865035180:web:273c7c1998d9b57664f009"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-const chatRef=db.collection("chat");
-const imgRef=db.collection("images");
+const chatRef = db.collection("chat");
+const imgRef = db.collection("images");
 
 /* STATE */
-let chatUnlocked=false;
-let imageUnlocked=false;
-let chatOpen=false;
+let isGuest = false;
+let guestUser = "";
+let currentUsername = "";
+let chatOpen = false;
+let chatUnlocked = false;
+let imageUnlocked = false;
 
-let lastTranslated="";
-let history=[];
+let lastTranslated = "";
+let translationHistory = [];
+let chatUnsubscribe = null;
 
 /* CODES */
-const CHAT_CODE="$01$";
-const IMG_CODE="IloveCodeGeass";
+const CHAT_CODE = "$01$";
+const IMAGE_CODE = "IloveCodeGeass";
 
-/* LOGIN */
+/* =========================
+   APP START FIX
+========================= */
+function enterApp(){
+  loginScreen.style.display = "none";
+  app.style.display = "block";
+
+  loadChat();
+}
+
+/* =========================
+   AUTH FIX
+========================= */
 function login(){
-  auth.signInWithEmailAndPassword(email.value,password.value);
-}
-function register(){
-  auth.createUserWithEmailAndPassword(email.value,password.value);
-}
-function logout(){auth.signOut();}
+  auth.signInWithEmailAndPassword(email.value, password.value)
+    .then((userCredential)=>{
+      currentUsername =
+        username.value?.trim() ||
+        userCredential.user.email.split("@")[0];
 
-/* CHAT CODE */
+      enterApp();
+    })
+    .catch(e=>alert(e.message));
+}
+
+function register(){
+  auth.createUserWithEmailAndPassword(email.value, password.value)
+    .then((userCredential)=>{
+      currentUsername =
+        username.value?.trim() ||
+        userCredential.user.email.split("@")[0];
+
+      enterApp();
+    })
+    .catch(e=>alert(e.message));
+}
+
+auth.onAuthStateChanged(user=>{
+  if(user || isGuest){
+    enterApp();
+  } else {
+    loginScreen.style.display = "flex";
+    app.style.display = "none";
+  }
+});
+
+function logout(){
+  isGuest = false;
+  guestUser = "";
+  currentUsername = "";
+  auth.signOut();
+}
+
+/* =========================
+   GUEST FIX
+========================= */
+function guestLogin(){
+  if(!guestName.value.trim()) return;
+
+  isGuest = true;
+  guestUser = guestName.value.trim();
+
+  enterApp();
+}
+
+/* =========================
+   MENU
+========================= */
+function toggleMenu(){
+  const m = document.getElementById("menu");
+  m.style.display = (m.style.display === "block") ? "none" : "block";
+}
+
+/* =========================
+   CHAT CODE PROTECTION
+========================= */
 function askChatCode(){
-  let c=prompt("Chat Code?");
-  if(c===CHAT_CODE){
-    chatUnlocked=true;
+  const c = prompt("Chat Code?");
+  if(c === CHAT_CODE){
+    chatUnlocked = true;
     toggleChat();
-    loadChat();
+  } else {
+    alert("Wrong code");
   }
 }
 
-/* CHAT */
 function toggleChat(){
-  if(!chatUnlocked) return askChatCode();
+  if(!chatUnlocked){
+    askChatCode();
+    return;
+  }
 
-  chatOpen=!chatOpen;
-  chatBox.style.display=chatOpen?"block":"none";
-  chatInputBox.style.display=chatOpen?"block":"none";
+  chatOpen = !chatOpen;
+
+  chatBox.style.display = chatOpen ? "block" : "none";
+  chatInputBox.style.display = chatOpen ? "block" : "none";
+
+  if(chatOpen){
+    setTimeout(()=>{
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }, 50);
+  }
 }
 
+/* =========================
+   CHAT SYSTEM FIX
+========================= */
 function loadChat(){
-  chatRef.orderBy("time").onSnapshot(snap=>{
-    chatBox.innerHTML="";
+
+  if(chatUnsubscribe) chatUnsubscribe();
+
+  chatUnsubscribe = chatRef.orderBy("time","asc").onSnapshot(snap=>{
+    chatBox.innerHTML = "";
+
+    let count = 0;
+
     snap.forEach(d=>{
-      let div=document.createElement("div");
-      div.innerText=d.data().user+": "+d.data().text;
+      count++;
+
+      const div = document.createElement("div");
+      div.style.padding = "4px";
+      div.innerText = d.data().user + ": " + d.data().text;
+
       chatBox.appendChild(div);
     });
-    chatBox.scrollTop=chatBox.scrollHeight;
+
+    updateMenuInfo();
+
+    requestAnimationFrame(()=>{
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
   });
 }
 
 function sendChat(){
-  let msg=chatInput.value;
+  const msg = chatInput.value;
   if(!msg.trim()) return;
 
+  const user =
+    isGuest ? guestUser :
+    (currentUsername || auth.currentUser?.email);
+
   chatRef.add({
-    text:msg,
-    user:username.value||"guest",
-    time:Date.now()
+    text: msg,
+    user: user,
+    time: Date.now()
   });
 
-  chatInput.value="";
+  chatInput.value = "";
 }
 
-/* IMAGE CODE */
+/* =========================
+   IMAGE SYSTEM FIX
+========================= */
 function askImageCode(){
-  let c=prompt("Image Code?");
-  if(c===IMG_CODE){
-    imageUnlocked=true;
-    imagePanel.style.display="block";
+  const c = prompt("Image Code?");
+  if(c === IMAGE_CODE){
+    imageUnlocked = true;
+    imagePanel.style.display = "block";
     loadImages();
+  } else {
+    alert("Wrong code");
   }
 }
 
-/* IMAGES */
 function uploadImage(){
   if(!imageUnlocked) return;
 
-  let file=imgUpload.files[0];
-  let r=new FileReader();
+  const file = imgUpload.files[0];
+  const reader = new FileReader();
 
-  r.onload=()=>{
-    imgRef.add({img:r.result,time:Date.now()});
+  reader.onload = ()=>{
+    imgRef.add({
+      img: reader.result,
+      user: currentUsername || guestUser || "anon",
+      time: Date.now()
+    });
   };
 
-  r.readAsDataURL(file);
+  reader.readAsDataURL(file);
 }
 
 function loadImages(){
   imgRef.orderBy("time","desc").onSnapshot(snap=>{
-    gallery.innerHTML="";
+    gallery.innerHTML = "";
+
     snap.forEach(d=>{
-      let img=document.createElement("img");
-      img.src=d.data().img;
+      const img = document.createElement("img");
+      img.src = d.data().img;
       gallery.appendChild(img);
     });
   });
 }
 
-/* TRANSLATE */
+/* =========================
+   TRANSLATE FIX
+========================= */
 async function translateText(){
-  let text=document.getElementById("text").value;
-  let from=fromLang.value;
-  let to=toLang.value;
 
-  let res=await fetch(`https://api.mymemory.translated.net/get?q=${text}&langpair=${from}|${to}`);
-  let data=await res.json();
+  const text = document.getElementById("text").value;
+  const from = fromLang.value;
+  const to = toLang.value;
 
-  lastTranslated=data.responseData.translatedText;
-  history.unshift(lastTranslated);
+  const res = await fetch(
+    `https://api.mymemory.translated.net/get?q=${text}&langpair=${from}|${to}`
+  );
 
-  output.innerText=lastTranslated;
+  const data = await res.json();
+
+  lastTranslated = data.responseData.translatedText;
+
+  translationHistory.unshift({from,to});
+  if(translationHistory.length > 10) translationHistory.pop();
+
+  output.innerText = lastTranslated;
 }
 
 function simplifyText(){
-  output.innerText="SIMPLIFIED:\n"+(lastTranslated||text.value).split(".")[0];
+  const base = lastTranslated || text.value;
+  output.innerText = "SIMPLIFIED:\n" + base.split(".")[0];
 }
 
 function summarizeText(){
-  output.innerText="SUMMARY:\n"+(lastTranslated||text.value).split(" ").slice(0,20).join(" ");
+  const base = lastTranslated || text.value;
+  output.innerText = "SUMMARY:\n" + base.split(" ").slice(0,20).join(" ") + "...";
 }
 
-/* MENU */
-function toggleMenu(){
-  menu.style.display=menu.style.display==="block"?"none":"block";
+/* =========================
+   MENU INFO FIX
+========================= */
+function updateMenuInfo(){
+
+  const now = new Date();
+  const reset = new Date();
+  reset.setHours(24,0,0,0);
+
+  const diff = reset - now;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+
+  const recent =
+    translationHistory.length > 0
+    ? translationHistory[0].from + " → " + translationHistory[0].to
+    : "none";
+
+  menuInfo.innerText =
+`⏱ Reset: ${h}h ${m}m
+🌍 Recent: ${recent}`;
+}
+
+setInterval(updateMenuInfo, 60000);
+
+/* =========================
+   SETTINGS
+========================= */
+function openSettings(){
+  output.innerText = "Settings";
+}
+
+function openHelp(){
+  output.innerText = "Help & Support";
 }
 
 function openInfo(){
-  let d=new Date();
-  let reset=new Date(); reset.setHours(24,0,0,0);
-
-  let diff=reset-d;
-  let h=Math.floor(diff/3600000);
-  let m=Math.floor((diff%3600000)/60000);
-
-  output.innerText=
-`RESET: ${h}h ${m}m
-RECENT: ${history[0]||"none"}`;
+  output.innerText =
+`System Active
+Chat + Translate OK`;
 }
 
-function openSettings(){output.innerText="Settings";}
+/* =========================
+   LANGUAGES
+========================= */
+const languages = {
+en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",
+it:"Italienisch",pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",
+ja:"Japanisch",ko:"Koreanisch"
+};
+
+function loadLanguages(){
+  for(let c in languages){
+    fromLang.add(new Option(languages[c],c));
+    toLang.add(new Option(languages[c],c));
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadLanguages);
 
 </script>
-
-</body>
-</html>
