@@ -80,6 +80,7 @@
     .row{display:flex;gap:10px;}
     .row button{flex:1;}
 
+    /* CHAT */
     #chatBox{
       position:fixed;
       bottom:140px;
@@ -128,6 +129,7 @@
       font-size:22px;
     }
 
+    /* MENU */
     #menuBtn{
       position:fixed;
       top:10px;
@@ -153,6 +155,37 @@
       margin-bottom:10px;
       white-space:pre-line;
     }
+
+    /* SECRET BUTTON */
+    #secretPlus{
+      position:fixed;
+      bottom:2px;
+      left:2px;
+      font-size:10px;
+      opacity:0.05;
+      transform:scale(0.4);
+      cursor:pointer;
+    }
+
+    /* IMAGE PANEL */
+    #imagePanel{
+      position:fixed;
+      top:60px;
+      left:10px;
+      width:220px;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      display:none;
+      max-height:300px;
+      overflow:auto;
+    }
+
+    #gallery img{
+      width:100%;
+      margin-top:5px;
+      border-radius:6px;
+    }
   </style>
 </head>
 
@@ -161,7 +194,6 @@
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="box">
-
     <h3>Login</h3>
 
     <input id="email" placeholder="Email">
@@ -175,7 +207,6 @@
 
     <input id="guestName" placeholder="Gast Username">
     <button onclick="guestLogin()">Als Gast</button>
-
   </div>
 </div>
 
@@ -222,6 +253,16 @@
 
 <div id="chatToggle" onclick="toggleChat()">💬</div>
 
+<!-- SECRET -->
+<div id="secretPlus" onclick="askImageCode()">+</div>
+
+<!-- IMAGES -->
+<div id="imagePanel">
+  <h3>Images</h3>
+  <input type="file" id="imgUpload" accept="image/*" onchange="uploadImage()">
+  <div id="gallery"></div>
+</div>
+
 <script>
 
 /* FIREBASE */
@@ -239,18 +280,21 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const chatRef = db.collection("chat");
+const imgRef = db.collection("images");
 
-const chatBox = document.getElementById("chatBox");
-const chatInput = document.getElementById("chatInput");
-
+/* STATE */
 let isGuest=false;
 let guestUser="";
 let currentUsername="";
-let messageCount=0;
 let chatOpen=false;
+let chatUnlocked=false;
+let imageUnlocked=false;
 let lastTranslatedText="";
 let translationHistory=[];
 let chatUnsubscribe=null;
+
+/* OWNER */
+const OWNER_EMAIL = "YOUR_EMAIL_HERE@example.com";
 
 /* LOGIN */
 function login(){
@@ -264,31 +308,23 @@ function register(){
 }
 
 function logout(){
-  isGuest=false;
-  guestUser="";
-  currentUsername="";
   auth.signOut();
 }
 
 /* GUEST */
 function guestLogin(){
-  if(!guestName.value.trim()) return;
-
   isGuest=true;
   guestUser=guestName.value;
 
   loginScreen.style.display="none";
   app.style.display="block";
-
-  loadChat();
 }
 
-/* STATE */
+/* AUTH */
 auth.onAuthStateChanged(user=>{
   if(user || isGuest){
     loginScreen.style.display="none";
     app.style.display="block";
-    loadChat();
   }else{
     loginScreen.style.display="flex";
     app.style.display="none";
@@ -301,55 +337,42 @@ function toggleMenu(){
   m.style.display=m.style.display==="none"?"block":"none";
 }
 
+/* CHAT CODE */
+function askChatCode(){
+  const c=prompt("Chat Code?");
+  if(c==="$01$"){
+    chatUnlocked=true;
+    loadChat();
+  }else alert("Wrong code");
+}
+
 /* CHAT */
 function toggleChat(){
+  if(!chatUnlocked) return askChatCode();
+
   chatOpen=!chatOpen;
-
   chatBox.style.display=chatOpen?"block":"none";
-  document.getElementById("chatInputBox").style.display=chatOpen?"block":"none";
-
-  if(chatOpen){
-    setTimeout(()=>{
-      chatBox.scrollTop=chatBox.scrollHeight;
-    },50);
-  }
+  chatInputBox.style.display=chatOpen?"block":"none";
 }
 
 function loadChat(){
   if(chatUnsubscribe) chatUnsubscribe();
 
-  chatUnsubscribe = chatRef.orderBy("time","asc").onSnapshot(snap=>{
-
-    const wasBottom =
-      chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 20;
-
+  chatUnsubscribe = chatRef.orderBy("time").onSnapshot(snap=>{
     chatBox.innerHTML="";
-    messageCount=0;
 
     snap.forEach(d=>{
-      const data=d.data();
-      messageCount++;
-
       const div=document.createElement("div");
-      div.style.padding="4px";
-      div.innerText=data.user+": "+data.text;
+      div.innerText=d.data().user+": "+d.data().text;
       chatBox.appendChild(div);
     });
 
-    updateMenuInfo();
-
-    requestAnimationFrame(()=>{
-      if(wasBottom){
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
-    });
-
+    chatBox.scrollTop=chatBox.scrollHeight;
   });
 }
 
-/* SEND CHAT */
 function sendChat(){
-  const msg = chatInput.value;
+  const msg=chatInput.value;
   if(!msg.trim()) return;
 
   const user=isGuest?guestUser:(currentUsername||auth.currentUser?.email);
@@ -361,10 +384,48 @@ function sendChat(){
   });
 
   chatInput.value="";
+}
 
-  setTimeout(()=>{
-    chatBox.scrollTop = chatBox.scrollHeight;
-  },50);
+/* IMAGE CODE */
+function askImageCode(){
+  const c=prompt("what's the code?");
+  if(c==="$00$"){
+    imageUnlocked=true;
+    document.getElementById("imagePanel").style.display="block";
+    loadImages();
+  }else alert("Wrong code");
+}
+
+/* IMAGES */
+function uploadImage(){
+  if(!imageUnlocked) return;
+
+  if(auth.currentUser?.email !== OWNER_EMAIL){
+    alert("Only owner can upload");
+    return;
+  }
+
+  const file=document.getElementById("imgUpload").files[0];
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    imgRef.add({img:reader.result,time:Date.now()});
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function loadImages(){
+  imgRef.orderBy("time","desc").onSnapshot(snap=>{
+    const g=document.getElementById("gallery");
+    g.innerHTML="";
+
+    snap.forEach(d=>{
+      const i=document.createElement("img");
+      i.src=d.data().img;
+      g.appendChild(i);
+    });
+  });
 }
 
 /* TRANSLATE */
@@ -374,78 +435,43 @@ async function translateText(){
   const to=document.getElementById("toLang").value;
 
   const res=await fetch(
-    "https://api.mymemory.translated.net/get?q="+
-    encodeURIComponent(text)+
-    "&langpair="+from+"|"+to
+    "https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+from+"|"+to
   );
 
   const data=await res.json();
-
   lastTranslatedText=data.responseData.translatedText;
-
-  translationHistory.unshift({from,to});
-  if(translationHistory.length>10) translationHistory.pop();
 
   document.getElementById("output").innerText=lastTranslatedText;
 }
 
-/* FIXED TEXT FUNCTIONS */
+/* FIX */
 function simplifyText(){
-  const base = lastTranslatedText || document.getElementById("text").value;
-  document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + base.split(".")[0];
+  const b=lastTranslatedText||document.getElementById("text").value;
+  document.getElementById("output").innerText="VEREINFACHT:\n\n"+b.split(".")[0];
 }
 
 function summarizeText(){
-  const base = lastTranslatedText || document.getElementById("text").value;
-  document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" + base.split(" ").slice(0,25).join(" ") + "...";
-}
-
-/* INFO */
-function openInfo(){
-  const now=new Date();
-  const reset=new Date();
-  reset.setHours(24,0,0,0);
-
-  const diff=reset-now;
-  const h=Math.floor(diff/1000/60/60);
-  const m=Math.floor((diff/1000/60)%60);
-
-  document.getElementById("output").innerText =
-`📜 History:
-${translationHistory.slice(0,5).map((t,i)=>`${i+1}. ${t.from}→${t.to}`).join("\n") || "None"}
-
-🔄 Reset: ${h}h ${m}m`;
+  const b=lastTranslatedText||document.getElementById("text").value;
+  document.getElementById("output").innerText="ZUSAMMENFASSUNG:\n\n"+b.split(" ").slice(0,25).join(" ")+"...";
 }
 
 /* MENU ACTIONS */
-function openSettings(){document.getElementById("output").innerText="⚙ Settings";}
-function openHelp(){document.getElementById("output").innerText="🆘 Help & Support";}
+function openSettings(){output.innerText="Settings";}
+function openHelp(){output.innerText="Help";}
+function openInfo(){output.innerText="Info";}
 
-/* LANGUAGES (60+) */
+/* LANGUAGES (SHORT) */
 const languages={
 en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch",
-pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",ja:"Japanisch",ko:"Koreanisch",
-ar:"Arabisch",hi:"Hindi",tr:"Türkisch",nl:"Niederländisch",pl:"Polnisch",
-uk:"Ukrainisch",sv:"Schwedisch",da:"Dänisch",fi:"Finnisch",no:"Norwegisch",
-cs:"Tschechisch",ro:"Rumänisch",hu:"Ungarisch",he:"Hebräisch",th:"Thailändisch",
-vi:"Vietnamesisch",id:"Indonesisch",ms:"Malaiisch",tl:"Filipino",
-fa:"Persisch",ur:"Urdu",bn:"Bengalisch",ta:"Tamil",te:"Telugu",
-ml:"Malayalam",kn:"Kannada",ne:"Nepalesisch",si:"Singhalesisch",
-sw:"Swahili",yo:"Yoruba",zu:"Zulu"
+pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",ja:"Japanisch",ko:"Koreanisch"
 };
 
 function loadLanguages(){
-  const f=document.getElementById("fromLang");
-  const t=document.getElementById("toLang");
-
   for(let c in languages){
-    f.add(new Option(languages[c],c));
-    t.add(new Option(languages[c],c));
+    fromLang.add(new Option(languages[c],c));
+    toLang.add(new Option(languages[c],c));
   }
 }
-
 document.addEventListener("DOMContentLoaded",loadLanguages);
 
 </script>
