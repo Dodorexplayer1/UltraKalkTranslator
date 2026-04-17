@@ -3,7 +3,6 @@
 <head>
   <title>Ultra Translator 50 Global</title>
 
-  <!-- ✅ WICHTIG: MOBILE FIX -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -32,9 +31,7 @@
     }
 
     h2{
-      margin-top:5px;
       text-align:center;
-      font-size:20px;
     }
 
     textarea,select,button{
@@ -48,7 +45,6 @@
 
     textarea{
       min-height:90px;
-      resize:none;
       background:#0f172a;
       color:white;
     }
@@ -63,12 +59,6 @@
       color:white;
       font-weight:bold;
       cursor:pointer;
-      transition:0.2s;
-    }
-
-    button:hover{
-      background:#2563eb;
-      transform:scale(1.02);
     }
 
     .row{display:flex;gap:10px;}
@@ -80,44 +70,12 @@
       background:#0f172a;
       border-radius:10px;
       min-height:70px;
-      white-space:pre-wrap;
-      border:1px solid #1f2937;
     }
 
-    .menu-icon{
-      position:absolute;
-      top:12px;
-      right:14px;
-      cursor:pointer;
-      font-size:18px;
-    }
-
-    .menu{
-      position:absolute;
-      top:45px;
-      right:10px;
-      background:#0f172a;
-      border-radius:12px;
-      width:180px;
-      overflow:hidden;
-      border:1px solid #1f2937;
-    }
-
-    .menu div{
-      padding:10px;
-      cursor:pointer;
-      border-bottom:1px solid #1f2937;
-    }
-
-    .menu div:hover{
-      background:#1e293b;
-    }
-
-    .hidden{display:none;}
-
+    /* 💬 CHAT */
     #chatBox{
       position:fixed;
-      bottom:10px;
+      bottom:70px;
       right:10px;
       width:260px;
       background:#0f172a;
@@ -125,6 +83,7 @@
       border-radius:12px;
       font-size:12px;
       border:1px solid #1f2937;
+      display:none;
     }
 
     #chatMessages{
@@ -141,40 +100,32 @@
       padding:8px;
       border-radius:8px;
       border:none;
-      margin-top:5px;
-      background:#0f172a;
+      background:#111827;
       color:white;
     }
 
-    /* 📱 MOBILE FIX */
-    @media (max-width: 600px){
-      .card{
-        width:95%;
-        padding:16px;
-        border-radius:14px;
-      }
+    /* 💬 BUTTON */
+    #chatToggle{
+      position:fixed;
+      bottom:10px;
+      right:10px;
+      width:55px;
+      height:55px;
+      border-radius:50%;
+      background:#3b82f6;
+      color:white;
+      font-size:22px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      cursor:pointer;
+      box-shadow:0 5px 15px rgba(0,0,0,0.4);
+    }
 
-      h2{
-        font-size:18px;
-      }
-
-      textarea{
-        min-height:110px;
-      }
-
-      button{
-        padding:14px;
-        font-size:15px;
-      }
-
+    @media (max-width:600px){
       #chatBox{
         width:90%;
         right:5%;
-        bottom:10px;
-      }
-
-      .menu{
-        width:160px;
       }
     }
   </style>
@@ -183,16 +134,6 @@
 <body>
 
 <div class="card">
-
-  <div class="menu-icon" onclick="toggleMenu()">|||</div>
-
-  <div id="menu" class="menu hidden">
-    <div onclick="openSettings()">Settings</div>
-    <div onclick="openLogin()">Login</div>
-    <div onclick="openSupport()">Help & Support</div>
-    <div onclick="openRules()">Regeln</div>
-  </div>
-
   <h2>Ultra Translator 50 Global</h2>
 
   <textarea id="text"></textarea>
@@ -210,12 +151,16 @@
   <div id="output"></div>
 </div>
 
+<!-- 💬 CHAT -->
 <div id="chatBox">
-  <b>💬 Tipps</b>
+  <b>💬 Chat</b>
   <div id="chatMessages"></div>
-  <input id="chatInput" placeholder="Tipp schreiben">
+  <input id="chatInput">
   <button onclick="sendChat()">Senden</button>
 </div>
+
+<!-- 💬 BUTTON -->
+<div id="chatToggle" onclick="toggleChat()">💬</div>
 
 <script>
 
@@ -235,7 +180,7 @@ const chatRef = db.collection("chat");
 
 let lastResult = "";
 
-/* 🌍 50 Sprachen */
+/* 🌍 ALLE SPRACHEN */
 const languages = {
   en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
   it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
@@ -262,6 +207,12 @@ function loadLanguages(){
   }
 }
 
+/* 💬 CHAT TOGGLE */
+function toggleChat(){
+  let box=document.getElementById("chatBox");
+  box.style.display = box.style.display==="none" ? "block" : "none";
+}
+
 /* TRANSLATE */
 async function translateText(){
   let text=document.getElementById("text").value;
@@ -275,64 +226,40 @@ async function translateText(){
   );
 
   let data=await res.json();
-  lastResult = data.responseData.translatedText;
-  document.getElementById("output").innerText = lastResult;
+  lastResult=data.responseData.translatedText;
+  output.innerText=lastResult;
 }
 
 /* VEREINFACHEN */
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value || "";
-
-  if(!text.trim()){
-    document.getElementById("output").innerText = "Kein Text zum Vereinfachen";
-    return;
-  }
-
   let sentences = text.split(/[.!?]/).map(s=>s.trim()).filter(Boolean);
   let keep = Math.max(1, Math.ceil(sentences.length * 0.5));
 
   let result = sentences.slice(0,keep).map(s=>{
     let simple = s
       .replace(/\b(jedoch|allerdings|dennoch|trotzdem)\b/gi,"aber")
-      .replace(/\b(durchgeführt|implementiert|realisiert|ausgeführt)\b/gi,"gemacht")
-      .replace(/\b(Informationen?|Details|Aspekte|Daten)\b/gi,"Infos")
       .replace(/\b(komplex|kompliziert|schwierig)\b/gi,"einfach");
 
     return simple.length > 80 ? simple.slice(0,70)+"..." : simple;
   }).join(". ");
 
-  document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + result + ".";
+  output.innerText="VEREINFACHT:\n\n"+result+".";
 }
 
 /* ZUSAMMENFASSEN */
 function summarizeText(){
   let text = lastResult || document.getElementById("text").value || "";
-
   let sentences = text.split(/[.!?]/).map(s=>s.trim()).filter(s=>s.length>20);
-  if(sentences.length===0){
-    document.getElementById("output").innerText=text;
-    return;
-  }
 
-  let first = sentences[0];
-  let longest = sentences.sort((a,b)=>b.length-a.length)[0];
+  let first = sentences[0] || text;
+  let longest = sentences.sort((a,b)=>b.length-a.length)[0] || "";
 
   let summary = first;
   if(longest!==first) summary += ". "+longest;
 
-  document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n"+summary+".";
+  output.innerText="ZUSAMMENFASSUNG:\n\n"+summary+".";
 }
-
-/* MENU */
-function toggleMenu(){
-  document.getElementById("menu").classList.toggle("hidden");
-}
-function openSettings(){output.innerText="Settings";}
-function openLogin(){output.innerText="Login";}
-function openSupport(){output.innerText="Support";}
-function openRules(){output.innerText="Regeln";}
 
 /* CHAT */
 function sendChat(){
@@ -340,7 +267,7 @@ function sendChat(){
   if(!msg) return;
 
   chatRef.add({text:msg,time:Date.now()});
-  document.getElementById("chatInput").value="";
+  chatInput.value="";
 }
 
 function loadChat(){
@@ -349,7 +276,7 @@ function loadChat(){
     box.innerHTML="";
     snap.forEach(d=>{
       let div=document.createElement("div");
-      div.innerText="💡 "+d.data().text;
+      div.innerText="💬 "+d.data().text;
       box.appendChild(div);
     });
   });
