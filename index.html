@@ -1,315 +1,433 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Übersetzer</title>
+  <title>Ultra Translator 50 Global</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
+  <style>
+    body{
+      margin:0;
+      font-family:Arial;
+      background:#0f172a;
+      color:white;
+    }
 
-#loginScreen{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-}
+    #loginScreen{
+      position:fixed;
+      inset:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:linear-gradient(135deg,#0f172a,#1e293b);
+    }
 
-.box{
-  background:#111827;
-  padding:20px;
-  border-radius:12px;
-  width:300px;
-}
+    .box{
+      background:#111827;
+      padding:20px;
+      border-radius:12px;
+      width:300px;
+    }
 
-input,button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-}
+    input,button{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:8px;
+      border:none;
+    }
 
-button{
-  background:#3b82f6;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
+    button{
+      background:#3b82f6;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+    }
 
-/* FIX: GRÖSSER */
-#app{
-  display:none;
-  padding:20px;
-  max-width:1200px;
-  margin:0 auto;
-}
+    #app{display:none;padding:20px;}
 
-textarea,select,#output{
-  width:100%;
-  box-sizing:border-box;
-}
+    textarea,select{
+      width:100%;
+      margin-top:10px;
+      padding:10px;
+      border-radius:8px;
+      border:none;
+    }
 
-textarea{
-  min-height:160px;
-  background:#111827;
-  color:white;
-  font-size:16px;
-}
+    textarea{
+      min-height:140px;
+      font-size:16px;
+      background:#111827;
+      color:white;
+    }
 
-select{
-  background:#111827;
-  color:white;
-}
+    select{
+      background:#111827;
+      color:white;
+    }
 
-#output{
-  margin-top:15px;
-  padding:15px;
-  background:#111827;
-  border-radius:10px;
-  min-height:180px;
-}
+    #output{
+      margin-top:15px;
+      padding:15px;
+      background:#111827;
+      border-radius:10px;
+      min-height:140px;
+      font-size:18px;
+      line-height:1.5;
+      white-space:pre-line;
+    }
 
-/* MENU */
-#menuBtn{
-  position:fixed;
-  top:10px;
-  right:10px;
-  font-size:22px;
-  cursor:pointer;
-}
+    /* MENU */
+    #menuBtn{
+      position:fixed;
+      top:10px;
+      right:10px;
+      font-size:22px;
+      cursor:pointer;
+      z-index:999;
+    }
 
-#menu{
-  position:fixed;
-  top:40px;
-  right:10px;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-  width:220px;
-}
+    #menu{
+      position:fixed;
+      top:40px;
+      right:10px;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      display:none;
+      z-index:999;
+    }
 
-/* CHAT FIX */
-#chatBox{
-  position:fixed;
-  bottom:140px;
-  right:10px;
-  width:320px;
-  height:320px;
-  overflow-y:auto;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-}
+    /* CHAT */
+    #chatBox{
+      position:fixed;
+      bottom:140px;
+      right:10px;
+      width:280px;
+      height:280px;
+      overflow-y:auto;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      display:none;
+    }
 
-#chatInputBox{
-  position:fixed;
-  bottom:70px;
-  right:10px;
-  width:320px;
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-}
+    #chatInputBox{
+      position:fixed;
+      bottom:70px;
+      right:10px;
+      width:280px;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      display:none;
+    }
 
-#chatToggle{
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:#3b82f6;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
-}
+    #chatToggle{
+      position:fixed;
+      bottom:10px;
+      right:10px;
+      width:55px;
+      height:55px;
+      border-radius:50%;
+      background:#3b82f6;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      cursor:pointer;
+    }
 
-</style>
+    /* UPLOAD */
+    #uploadBtn{
+      position:fixed;
+      bottom:80px;
+      left:50%;
+      transform:translateX(-50%);
+    }
+
+    #imagePanel{
+      display:none;
+      position:fixed;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      width:340px;
+      background:#111827;
+      padding:10px;
+      border-radius:10px;
+      max-height:70vh;
+      overflow-y:auto;
+      z-index:999;
+    }
+
+    #gallery img{
+      width:100%;
+      margin-top:10px;
+      border-radius:8px;
+    }
+  </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="box">
     <h3>Login</h3>
+
     <input id="email" placeholder="Email">
     <input id="password" type="password" placeholder="Passwort">
     <input id="username" placeholder="Username">
+
     <button onclick="login()">Login</button>
     <button onclick="register()">Registrieren</button>
+
+    <hr>
+
+    <input id="guestName" placeholder="Guest">
+    <button onclick="guestLogin()">Continue</button>
   </div>
 </div>
 
 <div id="app">
 
-<div id="menuBtn" onclick="toggleMenu()">|||</div>
+  <!-- MENU -->
+  <div id="menuBtn" onclick="toggleMenu()">|||</div>
 
-<div id="menu">
-  <button onclick="openInfo()">Info</button>
-  <button onclick="openSettings()">Settings</button>
-  <button onclick="openHelp()">Help</button>
-  <button onclick="resetChat()">Reset Chat</button>
-  <button onclick="logout()">Logout</button>
+  <div id="menu">
+    <button onclick="openSettings()">Settings</button>
+    <button onclick="openHelp()">Help</button>
+    <button onclick="openInfo()">Info</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <h2>Ultra Translator 50 Global</h2>
+
+  <!-- UPLOAD -->
+  <div id="uploadBtn">
+    <button onclick="openUpload()">+ Upload Image</button>
+  </div>
+
+  <textarea id="text"></textarea>
+
+  <select id="fromLang"></select>
+  <select id="toLang"></select>
+
+  <button onclick="translateText()">Übersetzen</button>
+
+  <div>
+    <button onclick="simplifyText()">Vereinfachen</button>
+    <button onclick="summarizeText()">Zusammenfassen</button>
+  </div>
+
+  <div id="output"></div>
+
+  <!-- CHAT -->
+  <div id="chatBox"></div>
+
+  <div id="chatInputBox">
+    <input id="chatInput" placeholder="Message">
+    <button onclick="sendChat()">Send</button>
+  </div>
+
+  <div id="chatToggle" onclick="toggleChat()">💬</div>
 </div>
 
-<h2>Übersetzer</h2>
-
-<textarea id="text"></textarea>
-
-<select id="fromLang"></select>
-<select id="toLang"></select>
-
-<button onclick="translateText()">Übersetzen</button>
-<button onclick="simplifyText()">Vereinfachen</button>
-<button onclick="summarizeText()">Zusammenfassen</button>
-
-<div id="output"></div>
-
-<div id="chatBox"></div>
-<div id="chatInputBox">
-  <input id="chatInput">
-  <button onclick="sendChat()">Send</button>
-</div>
-
-<div id="chatToggle" onclick="toggleChat()">💬</div>
-
+<!-- IMAGE -->
+<div id="imagePanel">
+  <button onclick="closeUpload()">Close</button>
+  <input type="file" id="imgUpload">
+  <button onclick="uploadImage()">Upload</button>
+  <div id="gallery"></div>
 </div>
 
 <script>
 
 firebase.initializeApp({
-apiKey:"AIzaSyAjS5W-l2Hm_iBSq4_az2WReQwY4ZmEweU",
-authDomain:"projekt-erstellen-dfc13.firebaseapp.com",
-projectId:"projekt-erstellen-dfc13"
+  apiKey:"AIzaSyAjS5W-l2Hm_iBSq4_az2WReQwY4ZmEweU",
+  authDomain:"projekt-erstellen-dfc13.firebaseapp.com",
+  projectId:"projekt-erstellen-dfc13"
 });
 
 const auth=firebase.auth();
 const db=firebase.firestore();
-const chatRef=db.collection("chat");
 
-let lastTranslation="";
+const chatRef=db.collection("chat");
+const imgRef=db.collection("images");
+
+/* STATE */
+let isGuest=false;
+let guestUser="";
+let currentUsername="";
+let chatUnlocked=false;
+let uploadUnlocked=false;
+let lastText="";
+
+/* MENU */
+function toggleMenu(){
+  const m=document.getElementById("menu");
+  m.style.display = m.style.display==="block"?"none":"block";
+}
 
 /* LOGIN */
 function login(){
-auth.signInWithEmailAndPassword(email.value,password.value);
+  auth.signInWithEmailAndPassword(email.value,password.value)
+  .then(u=>{
+    currentUsername=username.value || u.user.email;
+  });
 }
 
 function register(){
-auth.createUserWithEmailAndPassword(email.value,password.value);
+  auth.createUserWithEmailAndPassword(email.value,password.value)
+  .then(u=>{
+    currentUsername=username.value || u.user.email;
+  });
 }
 
 function logout(){
-auth.signOut();
+  auth.signOut();
+  isGuest=false;
+  guestUser="";
 }
 
-/* CHAT FIX */
-function loadChat(){
-chatRef.orderBy("time").onSnapshot(snap=>{
-const box=document.getElementById("chatBox");
-
-box.innerHTML="";
-
-snap.forEach(d=>{
-const div=document.createElement("div");
-div.innerText=d.data().user+": "+d.data().text;
-box.appendChild(div);
-});
-
-box.scrollTop = box.scrollHeight;
-});
-}
-
-/* CHAT SEND */
-function sendChat(){
-chatRef.add({
-text:chatInput.value,
-user:username.value || "user",
-time:Date.now()
-});
-chatInput.value="";
-}
-
-/* CHAT TOGGLE */
+/* CHAT CODE $01$ */
 function toggleChat(){
-const box=document.getElementById("chatBox");
-const input=document.getElementById("chatInputBox");
 
-let open=box.style.display==="block";
-box.style.display=open?"none":"block";
-input.style.display=open?"none":"block";
+  if(!chatUnlocked){
+    const c=prompt("Global Chat Code?");
+    if(c!=="$01$") return;
+    chatUnlocked=true;
+  }
+
+  const open=chatBox.style.display==="block";
+  chatBox.style.display=open?"none":"block";
+  chatInputBox.style.display=open?"none":"block";
+
+  requestAnimationFrame(()=>{
+    chatBox.scrollTop=chatBox.scrollHeight;
+  });
 }
 
-/* RESET */
-function resetChat(){
-chatRef.get().then(s=>{
-s.forEach(d=>chatRef.doc(d.id).delete());
-});
+/* CHAT */
+function loadChat(){
+  chatRef.orderBy("time","asc").onSnapshot(snap=>{
+    const box=chatBox;
+
+    const atBottom =
+      box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+
+    box.innerHTML="";
+
+    snap.forEach(d=>{
+      const div=document.createElement("div");
+      div.innerText=(d.data().user||"anon")+": "+d.data().text;
+      box.appendChild(div);
+    });
+
+    requestAnimationFrame(()=>{
+      if(atBottom || chatUnlocked){
+        box.scrollTop=box.scrollHeight;
+      }
+    });
+  });
+}
+
+function sendChat(){
+  if(!chatInput.value.trim()) return;
+
+  chatRef.add({
+    text:chatInput.value,
+    user:isGuest?guestUser:(currentUsername||"user"),
+    time:Date.now()
+  });
+
+  chatInput.value="";
+}
+
+/* UPLOAD CODE $00$ */
+function openUpload(){
+  if(!uploadUnlocked){
+    const c=prompt("Upload Code?");
+    if(c!=="$00$") return;
+    uploadUnlocked=true;
+  }
+  imagePanel.style.display="block";
+}
+
+function closeUpload(){
+  imagePanel.style.display="none";
+}
+
+function uploadImage(){
+  const file=imgUpload.files[0];
+  if(!file) return;
+
+  const r=new FileReader();
+  r.onload=()=>{
+    imgRef.add({
+      img:r.result,
+      user:currentUsername||guestUser||"anon",
+      time:Date.now()
+    });
+  };
+  r.readAsDataURL(file);
 }
 
 /* TRANSLATE */
 async function translateText(){
-let r=await fetch("https://api.mymemory.translated.net/get?q="+text.value+"&langpair="+fromLang.value+"|"+toLang.value);
-let d=await r.json();
-lastTranslation=d.responseData.translatedText;
-output.innerText=lastTranslation;
+  const r=await fetch(
+    "https://api.mymemory.translated.net/get?q="+text.value+
+    "&langpair="+fromLang.value+"|"+toLang.value
+  );
+
+  const d=await r.json();
+  lastText=d.responseData.translatedText;
+  output.innerText=lastText;
 }
 
-/* FIX FUNCTIONS */
+/* FIX */
 function simplifyText(){
-let base=lastTranslation||text.value;
-output.innerText=base.split(".")[0];
+  const b=output.innerText||text.value;
+  output.innerText=b.split(".")[0];
 }
 
 function summarizeText(){
-let base=lastTranslation||text.value;
-output.innerText=base.split(" ").slice(0,25).join(" ")+"...";
+  const b=output.innerText||text.value;
+  output.innerText=b.split(" ").slice(0,25).join(" ")+"...";
 }
 
-/* MENU */
-function toggleMenu(){
-menu.style.display=menu.style.display==="block"?"none":"block";
+/* INFO */
+function openInfo(){
+  output.innerText="System OK";
 }
 
-function openInfo(){output.innerText="System OK";}
 function openSettings(){output.innerText="Settings";}
 function openHelp(){output.innerText="Help";}
 
-/* 190 LANGUAGES */
+/* LANGUAGES FULL */
 const languages={
-en:"English",de:"Deutsch",fr:"Français",es:"Español",it:"Italiano",
-pt:"Português",ru:"Русский",zh:"中文",ja:"日本語",ko:"한국어",
-ar:"العربية",hi:"हिन्दी",tr:"Türkçe",nl:"Nederlands",pl:"Polski",
-uk:"Українська",sv:"Svenska",da:"Dansk",fi:"Suomi",no:"Norsk",
-cs:"Čeština",ro:"Română",hu:"Magyar",he:"עברית",th:"ไทย",
-vi:"Tiếng Việt",id:"Bahasa Indonesia",ms:"Bahasa Melayu",tl:"Filipino"
+en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch",
+pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",ja:"Japanisch",ko:"Koreanisch",
+ar:"Arabisch",hi:"Hindi",tr:"Türkisch",nl:"Niederländisch",pl:"Polnisch",
+uk:"Ukrainisch",sv:"Schwedisch",da:"Dänisch",fi:"Finnisch",no:"Norwegisch",
+cs:"Tschechisch",ro:"Rumänisch",hu:"Ungarisch",he:"Hebräisch",th:"Thailändisch",
+vi:"Vietnamesisch",id:"Indonesisch",ms:"Malaiisch",tl:"Filipino"
 };
 
 for(let l in languages){
-fromLang.add(new Option(languages[l],l));
-toLang.add(new Option(languages[l],l));
+  fromLang.add(new Option(languages[l],l));
+  toLang.add(new Option(languages[l],l));
 }
 
 auth.onAuthStateChanged(u=>{
-if(u){
-loginScreen.style.display="none";
-app.style.display="block";
-loadChat();
-}
+  if(u || isGuest){
+    loginScreen.style.display="none";
+    app.style.display="block";
+    loadChat();
+  }
 });
 
 </script>
