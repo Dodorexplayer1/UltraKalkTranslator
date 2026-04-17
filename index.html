@@ -74,12 +74,13 @@
       background:#111827;
       border-radius:8px;
       min-height:60px;
+      white-space:pre-line;
     }
 
     .row{display:flex;gap:10px;}
     .row button{flex:1;}
 
-    /* CHAT FIX */
+    /* CHAT */
     #chatBox{
       position:fixed;
       bottom:140px;
@@ -87,12 +88,10 @@
       width:250px;
       max-height:250px;
       overflow-y:auto;
-      overflow-x:hidden;
       background:#111827;
       padding:10px;
       border-radius:10px;
       display:none;
-      scroll-behavior:smooth;
     }
 
     #chatInputBox{
@@ -147,7 +146,7 @@
       padding:10px;
       border-radius:10px;
       display:none;
-      width:220px;
+      width:240px;
     }
 
     #menuInfo{
@@ -192,7 +191,7 @@
 
     <button onclick="openSettings()">Settings</button>
     <button onclick="openHelp()">Help & Support</button>
-    <button onclick="showFacts()">Facts</button>
+    <button onclick="openInfo()">Info</button>
 
     <hr>
     <button onclick="logout()">Logout</button>
@@ -243,6 +242,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const chatRef = db.collection("chat");
 
+/* STATE */
 let isGuest=false;
 let guestUser="";
 let currentUsername="";
@@ -250,7 +250,7 @@ let messageCount=0;
 let chatOpen=false;
 
 let lastTranslatedText="";
-let recentTranslations=[];
+let translationHistory=[];
 
 /* AUTH */
 function login(){
@@ -301,14 +301,14 @@ function toggleMenu(){
   m.style.display=m.style.display==="none"?"block":"none";
 }
 
-/* CHAT TOGGLE */
+/* CHAT */
 function toggleChat(){
   chatOpen=!chatOpen;
   chatBox.style.display=chatOpen?"block":"none";
   chatInputBox.style.display=chatOpen?"block":"none";
 }
 
-/* CHAT FIX FINAL */
+/* CHAT */
 function loadChat(){
   chatRef.orderBy("time","asc").onSnapshot(snap=>{
     const box=document.getElementById("chatBox");
@@ -325,14 +325,12 @@ function loadChat(){
       messageCount++;
 
       const div=document.createElement("div");
-      div.style.padding="4px";
       div.innerText=data.user+": "+data.text;
       box.appendChild(div);
     });
 
     updateMenuInfo();
 
-    // 🔥 SMART AUTO SCROLL
     if(wasAtBottom){
       requestAnimationFrame(()=>{
         box.scrollTop = box.scrollHeight;
@@ -353,15 +351,15 @@ function updateMenuInfo(){
   const h=Math.floor(diff/1000/60/60);
   const m=Math.floor((diff/1000/60)%60);
 
-  let recent="";
-  if(recentTranslations.length>0){
-    const last=recentTranslations[0];
-    recent=`\n🔁 ${last.from}→${last.to}`;
+  let history="";
+  if(translationHistory.length>0){
+    const last=translationHistory[0];
+    history=`\n📜 ${last.from}→${last.to}`;
   }
 
   info.innerText=
 `⏱ Reset: ${h}h ${m}m
-💬 Messages: ${messageCount}`+recent;
+💬 Messages: ${messageCount}`+history;
 }
 
 setInterval(updateMenuInfo,60000);
@@ -380,12 +378,6 @@ function sendChat(){
   });
 
   chatInput.value="";
-
-  // 🔥 sofort runter scrollen
-  const box=document.getElementById("chatBox");
-  requestAnimationFrame(()=>{
-    box.scrollTop = box.scrollHeight;
-  });
 }
 
 /* TRANSLATE */
@@ -404,8 +396,11 @@ async function translateText(){
 
   lastTranslatedText=data.responseData.translatedText;
 
-  recentTranslations.unshift({from,to});
-  if(recentTranslations.length>5) recentTranslations.pop();
+  translationHistory.unshift({
+    from,to,time:new Date().toLocaleTimeString()
+  });
+
+  if(translationHistory.length>10) translationHistory.pop();
 
   document.getElementById("output").innerText=lastTranslatedText;
 }
@@ -421,9 +416,34 @@ function summarizeText(){
   output.innerText="ZUSAMMENFASSUNG:\n\n"+base.split(" ").slice(0,25).join(" ")+"...";
 }
 
-/* MENU FEATURES */
+/* INFO SYSTEM */
+function openInfo(){
+  const now=new Date();
+  const reset=new Date();
+  reset.setHours(24,0,0,0);
+
+  const diff=reset-now;
+  const h=Math.floor(diff/1000/60/60);
+  const m=Math.floor((diff/1000/60)%60);
+
+  let historyText="📜 TRANSLATION HISTORY:\n\n";
+
+  if(translationHistory.length===0){
+    historyText+="No translations yet";
+  }else{
+    translationHistory.slice(0,5).forEach((t,i)=>{
+      historyText+=`${i+1}. ${t.from}→${t.to} (${t.time})\n`;
+    });
+  }
+
+  historyText+=`\n🔄 GLOBAL CHAT RESET:\n${h}h ${m}m remaining`;
+
+  document.getElementById("output").innerText=historyText;
+}
+
+/* OTHER */
 function openSettings(){
-  output.innerText="⚙ Settings Menü";
+  output.innerText="⚙ Settings";
 }
 
 function openHelp(){
@@ -432,11 +452,11 @@ function openHelp(){
 
 function showFacts(){
   const f=["Firebase Chat","Translation API","Realtime System"];
-  output.innerText="📊 "+f[Math.floor(Math.random()*f.length)];
+  output.innerText=f[Math.floor(Math.random()*f.length)];
 }
 
 /* LANGUAGES */
-const languages={en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch",pt:"Portugiesisch"};
+const languages={en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch"};
 
 function loadLanguages(){
   const f=document.getElementById("fromLang");
