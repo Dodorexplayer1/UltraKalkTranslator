@@ -88,11 +88,11 @@
       width:260px;
       height:260px;
       overflow-y:auto;
+      overflow-x:hidden;
       background:#111827;
       padding:10px;
       border-radius:10px;
       display:none;
-      scroll-behavior:smooth;
     }
 
     #chatInputBox{
@@ -146,15 +146,16 @@
       white-space:pre-line;
     }
 
-    /* IMAGE */
+    /* ✅ FIX: Upload Button UNTEN MITTE */
     #uploadTop{
       position:fixed;
-      top:10px;
+      bottom:20px;
       left:50%;
       transform:translateX(-50%);
       z-index:999;
     }
 
+    /* IMAGE PANEL */
     #imagePanel{
       display:none;
       position:fixed;
@@ -206,9 +207,9 @@
     <div id="menuInfo"></div>
   </div>
 
-  <!-- IMAGE BUTTON FIXED TOP CENTER -->
+  <!-- ✅ Upload Button jetzt unten MITTE -->
   <div id="uploadTop">
-    <button onclick="openImage()">+ Upload Image</button>
+    <button onclick="imagePanel.style.display='block'">+ Upload Image</button>
   </div>
 
   <h2>Ultra Translator 50 Global</h2>
@@ -238,7 +239,7 @@
 
 <div id="chatToggle" onclick="toggleChat()">💬</div>
 
-<!-- IMAGE PANEL -->
+<!-- IMAGE -->
 <div id="imagePanel">
   <input type="file" id="imgUpload">
   <button onclick="uploadImage()">Upload</button>
@@ -266,7 +267,7 @@ let guestUser="";
 let currentUsername="";
 let lastTranslated="";
 
-/* LOGIN FIX */
+/* LOGIN */
 function login(){
   auth.signInWithEmailAndPassword(email.value,password.value)
   .then(u=>{
@@ -303,12 +304,12 @@ function toggleMenu(){
   menu.style.display = menu.style.display==="block"?"none":"block";
 }
 
-/* CHAT FIX SCROLL + USERNAME */
+/* 💬 CHAT FIX (SCROLL 100% STABLE) */
 function loadChat(){
   chatRef.orderBy("time","asc").onSnapshot(s=>{
 
-    const stick =
-      chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 30;
+    const atBottom =
+      chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 40;
 
     chatBox.innerHTML="";
 
@@ -316,24 +317,26 @@ function loadChat(){
       const data=d.data();
 
       const div=document.createElement("div");
-      div.innerText = (data.user || "anon") + ": " + data.text;
+      div.innerText=(data.user||"anon")+": "+data.text;
 
       chatBox.appendChild(div);
     });
 
     requestAnimationFrame(()=>{
       requestAnimationFrame(()=>{
-        if(stick) chatBox.scrollTop = chatBox.scrollHeight;
+        if(atBottom){
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
       });
     });
 
   });
 }
 
-/* CHAT */
 function toggleChat(){
-  chatBox.style.display = chatBox.style.display==="block"?"none":"block";
-  chatInputBox.style.display = chatInputBox.style.display==="block"?"none":"block";
+  const open = chatBox.style.display==="block";
+  chatBox.style.display = open?"none":"block";
+  chatInputBox.style.display = open?"none":"block";
 
   requestAnimationFrame(()=>{
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -352,11 +355,7 @@ function sendChat(){
   chatInput.value="";
 }
 
-/* IMAGE FIX */
-function openImage(){
-  imagePanel.style.display="block";
-}
-
+/* 🖼 IMAGE */
 function uploadImage(){
   const file=imgUpload.files[0];
   if(!file) return;
@@ -392,7 +391,7 @@ function loadImages(){
   });
 }
 
-/* TRANSLATE FIX */
+/* TRANSLATE */
 async function translateText(){
   const r=await fetch(
     "https://api.mymemory.translated.net/get?q="+text.value+
@@ -404,21 +403,20 @@ async function translateText(){
   output.innerText=lastTranslated;
 }
 
-/* FIXED BASE TEXT */
+/* FIXED TEXT FUNCTIONS */
 function simplifyText(){
-  const base = lastTranslated || text.value;
-  output.innerText = base.split(".")[0];
+  const base=lastTranslated||text.value;
+  output.innerText=base.split(".")[0];
 }
 
 function summarizeText(){
-  const base = lastTranslated || text.value;
-  output.innerText = base.split(" ").slice(0,25).join(" ")+"...";
+  const base=lastTranslated||text.value;
+  output.innerText=base.split(" ").slice(0,25).join(" ")+"...";
 }
 
 /* LANGS */
 const languages={
-en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch",
-pt:"Portugiesisch",ru:"Russisch",zh:"Chinesisch",ja:"Japanisch",ko:"Koreanisch"
+en:"Englisch",de:"Deutsch",fr:"Französisch",es:"Spanisch",it:"Italienisch"
 };
 
 for(let l in languages){
