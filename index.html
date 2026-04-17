@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <h2>KalkÜbersetzer</h2>
+  <title>KalkÜbersetzer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -173,7 +173,6 @@
 
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <div class="box">
     <h3>Login</h3>
@@ -194,7 +193,6 @@
 
 <div id="app">
 
-  <!-- MENU -->
   <div id="menuBtn" onclick="toggleMenu()">|||</div>
 
   <div id="menu">
@@ -204,9 +202,8 @@
     <button onclick="logout()">Logout</button>
   </div>
 
-  <h2>Ultra Translator 50 Global</h2>
+  <h2>KalkÜbersetzer</h2>
 
-  <!-- UPLOAD -->
   <div id="uploadBtn">
     <button onclick="openUpload()">+ Upload Image</button>
   </div>
@@ -225,7 +222,6 @@
 
   <div id="output"></div>
 
-  <!-- CHAT -->
   <div id="chatBox"></div>
 
   <div id="chatInputBox">
@@ -236,7 +232,6 @@
   <div id="chatToggle" onclick="toggleChat()">💬</div>
 </div>
 
-<!-- IMAGE -->
 <div id="imagePanel">
   <button onclick="closeUpload()">Close</button>
   <input type="file" id="imgUpload">
