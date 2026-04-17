@@ -155,7 +155,7 @@ const chatRef = db.collection("chat");
 
 let lastResult = "";
 
-/* 50 SPRACHEN */
+/* 🌍 50 Sprachen */
 const languages = {
   en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
   it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
@@ -188,81 +188,82 @@ async function translateText(){
   let from=document.getElementById("fromLang").value;
   let to=document.getElementById("toLang").value;
 
-  if(!text.trim()){
-    document.getElementById("output").innerText="Kein Text";
-    return;
-  }
+  let res=await fetch(
+    "https://api.mymemory.translated.net/get?q="+
+    encodeURIComponent(text)+
+    "&langpair="+from+"|"+to
+  );
 
-  try{
-    let res = await fetch(
-      "https://api.mymemory.translated.net/get?q=" +
-      encodeURIComponent(text) +
-      "&langpair=" + from + "|" + to +
-      "&de=ahmadmnini92@gmail.com"
-    );
-
-    let data = await res.json();
-    lastResult = data?.responseData?.translatedText || "";
-    document.getElementById("output").innerText = lastResult;
-
-  }catch(e){
-    document.getElementById("output").innerText="Fehler";
-  }
+  let data=await res.json();
+  lastResult = data.responseData.translatedText;
+  document.getElementById("output").innerText = lastResult;
 }
 
-/* ✔ VEREINFACHEN FINAL FIX */
+/* 🔥 VEREINFACHEN (JETZT FUNKTIONIERT) */
 function simplifyText(){
-  let text = (lastResult || document.getElementById("text").value || "").trim();
+  let text = lastResult || document.getElementById("text").value || "";
 
-  if(!text){
-    document.getElementById("output").innerText="Kein Text zum Vereinfachen";
+  if(!text.trim()){
+    document.getElementById("output").innerText = "Kein Text zum Vereinfachen";
     return;
   }
 
   let result = text
-    .replace(/\b(sehr|wirklich|ziemlich|eigentlich|relativ|komplex|verschieden|unterschiedlich|diverse)\b/gi,"")
+    .replace(/\b(jedoch|allerdings|dennoch)\b/gi,"aber")
     .replace(/\b(durchgeführt|implementiert|realisiert|ausgeführt)\b/gi,"gemacht")
-    .replace(/\b(Informationen|Details|Aspekte|Daten|Sachen)\b/gi,"Infos")
-    .replace(/\s+/g," ")
-    .trim();
+    .replace(/\b(Informationen?|Details|Aspekte|Daten)\b/gi,"Infos")
+    .replace(/\b(komplex|kompliziert)\b/gi,"einfach")
+    .split(".")
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(s => s.length > 120 ? s.slice(0,100)+"..." : s)
+    .join(". ");
 
-  if(result.length < 5) result = text.split(" ").slice(0,10).join(" ");
-
-  document.getElementById("output").innerText =
-    "VEREINFACHT:\n\n" + result;
+  document.getElementById("output").innerText = "VEREINFACHT:\n\n" + result;
 }
 
-/* ✔ ZUSAMMENFASSEN FINAL FIX */
+/* 🔥 ZUSAMMENFASSEN (JETZT ECHT KÜRZER) */
 function summarizeText(){
-  let text = (lastResult || document.getElementById("text").value || "").trim();
+  let text = lastResult || document.getElementById("text").value || "";
 
-  if(!text){
-    document.getElementById("output").innerText="Kein Text zum Zusammenfassen";
+  if(!text.trim()){
+    document.getElementById("output").innerText = "Kein Text zum Zusammenfassen";
     return;
   }
 
-  let sentences = text.split(/(?<=[.!?])\s+|\n+/).filter(Boolean);
+  let sentences = text
+    .split(/[.!?]/)
+    .map(s => s.trim())
+    .filter(s => s.length > 20);
 
-  if(sentences.length <= 1){
-    document.getElementById("output").innerText=text;
+  if(sentences.length === 0){
+    document.getElementById("output").innerText = text;
     return;
   }
 
-  let summary = [
-    sentences[0],
-    sentences[Math.floor(sentences.length/2)],
-    sentences[sentences.length-1]
-  ];
+  let first = sentences[0];
+  let longest = sentences.sort((a,b)=>b.length-a.length)[0];
+
+  let summary = first;
+  if(longest !== first){
+    summary += ". " + longest;
+  }
 
   document.getElementById("output").innerText =
-    "ZUSAMMENFASSUNG:\n\n" + summary.join(". ");
+    "ZUSAMMENFASSUNG:\n\n" + summary + ".";
 }
 
-/* MENU + CHAT */
+/* MENU */
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("hidden");
 }
 
+function openSettings(){ document.getElementById("output").innerText="Settings"; }
+function openLogin(){ document.getElementById("output").innerText="Login"; }
+function openSupport(){ document.getElementById("output").innerText="Support"; }
+function openRules(){ document.getElementById("output").innerText="Regeln"; }
+
+/* CHAT */
 function sendChat(){
   let msg=document.getElementById("chatInput").value;
   if(!msg) return;
@@ -272,18 +273,21 @@ function sendChat(){
 }
 
 function loadChat(){
-  chatRef.orderBy("time").onSnapshot(s=>{
+  chatRef.orderBy("time").onSnapshot(snapshot=>{
     let box=document.getElementById("chatMessages");
     box.innerHTML="";
-    s.forEach(d=>{
+
+    snapshot.forEach(doc=>{
       let div=document.createElement("div");
-      div.innerText="💡 "+d.data().text;
+      div.innerText="💡 "+doc.data().text;
       box.appendChild(div);
     });
-    box.scrollTop=box.scrollHeight;
+
+    box.scrollTop = box.scrollHeight;
   });
 }
 
+/* INIT */
 document.addEventListener("DOMContentLoaded",()=>{
   loadLanguages();
   loadChat();
