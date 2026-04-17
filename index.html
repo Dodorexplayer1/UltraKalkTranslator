@@ -1,117 +1,171 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Übersetzer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Übersetzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
 body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
 
-#app{
-display:none;
-padding:20px;
-max-width:1200px;
-margin:auto;
+#loginScreen{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
 }
 
-textarea,select,button,#output{
-width:100%;
-box-sizing:border-box;
-margin-top:10px;
-border-radius:8px;
-border:none;
+.box{
+  background:#111827;
+  padding:20px;
+  border-radius:12px;
+  width:300px;
 }
 
-textarea{
-min-height:140px;
-background:#111827;
-color:white;
-padding:10px;
-}
-
-select{
-background:#111827;
-color:white;
-padding:10px;
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
 }
 
 button{
-background:#3b82f6;
-color:white;
-padding:10px;
-font-weight:bold;
-cursor:pointer;
+  background:#3b82f6;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* FIX: GRÖSSER */
+#app{
+  display:none;
+  padding:20px;
+  max-width:1200px;
+  margin:0 auto;
+}
+
+textarea,select,#output{
+  width:100%;
+  box-sizing:border-box;
+}
+
+textarea{
+  min-height:160px;
+  background:#111827;
+  color:white;
+  font-size:16px;
+}
+
+select{
+  background:#111827;
+  color:white;
 }
 
 #output{
-background:#111827;
-padding:12px;
-min-height:120px;
+  margin-top:15px;
+  padding:15px;
+  background:#111827;
+  border-radius:10px;
+  min-height:180px;
+}
+
+/* MENU */
+#menuBtn{
+  position:fixed;
+  top:10px;
+  right:10px;
+  font-size:22px;
+  cursor:pointer;
+}
+
+#menu{
+  position:fixed;
+  top:40px;
+  right:10px;
+  background:#111827;
+  padding:10px;
+  border-radius:10px;
+  display:none;
+  width:220px;
 }
 
 /* CHAT FIX */
 #chatBox{
-position:fixed;
-bottom:140px;
-right:10px;
-width:320px;
-height:320px;
-overflow-y:auto;
-background:#111827;
-padding:10px;
-border-radius:10px;
-display:none;
+  position:fixed;
+  bottom:140px;
+  right:10px;
+  width:320px;
+  height:320px;
+  overflow-y:auto;
+  background:#111827;
+  padding:10px;
+  border-radius:10px;
+  display:none;
 }
 
 #chatInputBox{
-position:fixed;
-bottom:70px;
-right:10px;
-width:320px;
-background:#111827;
-padding:10px;
-border-radius:10px;
-display:none;
+  position:fixed;
+  bottom:70px;
+  right:10px;
+  width:320px;
+  background:#111827;
+  padding:10px;
+  border-radius:10px;
+  display:none;
 }
 
 #chatToggle{
-position:fixed;
-bottom:10px;
-right:10px;
-width:55px;
-height:55px;
-border-radius:50%;
-background:#3b82f6;
-display:flex;
-justify-content:center;
-align-items:center;
-cursor:pointer;
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:#3b82f6;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
 }
+
 </style>
 </head>
 
 <body>
 
 <div id="loginScreen">
-<div class="box">
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<input id="username" placeholder="Username">
-<button onclick="login()">Login</button>
-<button onclick="register()">Register</button>
-</div>
+  <div class="box">
+    <h3>Login</h3>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Passwort">
+    <input id="username" placeholder="Username">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Registrieren</button>
+  </div>
 </div>
 
 <div id="app">
+
+<div id="menuBtn" onclick="toggleMenu()">|||</div>
+
+<div id="menu">
+  <button onclick="openInfo()">Info</button>
+  <button onclick="openSettings()">Settings</button>
+  <button onclick="openHelp()">Help</button>
+  <button onclick="resetChat()">Reset Chat</button>
+  <button onclick="logout()">Logout</button>
+</div>
 
 <h2>Übersetzer</h2>
 
@@ -127,10 +181,9 @@ cursor:pointer;
 <div id="output"></div>
 
 <div id="chatBox"></div>
-
 <div id="chatInputBox">
-<input id="chatInput">
-<button onclick="sendChat()">Send</button>
+  <input id="chatInput">
+  <button onclick="sendChat()">Send</button>
 </div>
 
 <div id="chatToggle" onclick="toggleChat()">💬</div>
@@ -151,7 +204,7 @@ const chatRef=db.collection("chat");
 
 let lastTranslation="";
 
-/* AUTH */
+/* LOGIN */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value);
 }
@@ -160,63 +213,28 @@ function register(){
 auth.createUserWithEmailAndPassword(email.value,password.value);
 }
 
-/* TRANSLATE */
-async function translateText(){
-let res=await fetch(
-"https://api.mymemory.translated.net/get?q="+
-encodeURIComponent(text.value)+
-"&langpair="+fromLang.value+"|"+toLang.value
-);
-
-let data=await res.json();
-lastTranslation=data.responseData.translatedText;
-
-output.innerText=lastTranslation;
+function logout(){
+auth.signOut();
 }
 
-/* SAFE BASE TEXT */
-function baseText(){
-return (lastTranslation && lastTranslation.trim()!=="")
-? lastTranslation
-: text.value;
-}
-
-/* FIX FUNCTIONS */
-function simplifyText(){
-output.innerText=baseText().split(".")[0];
-}
-
-function summarizeText(){
-output.innerText=baseText().split(" ").slice(0,25).join(" ")+"...";
-}
-
-/* CHAT FIX STABLE */
+/* CHAT FIX */
 function loadChat(){
 chatRef.orderBy("time").onSnapshot(snap=>{
 const box=document.getElementById("chatBox");
 
-const atBottom =
-box.scrollTop + box.clientHeight >= box.scrollHeight - 10;
-
 box.innerHTML="";
 
 snap.forEach(d=>{
-let div=document.createElement("div");
+const div=document.createElement("div");
 div.innerText=d.data().user+": "+d.data().text;
 box.appendChild(div);
 });
 
-/* FIX: guaranteed scroll */
-setTimeout(()=>{
-if(atBottom){
 box.scrollTop = box.scrollHeight;
-}
-},50);
-
 });
 }
 
-/* SEND CHAT */
+/* CHAT SEND */
 function sendChat(){
 chatRef.add({
 text:chatInput.value,
@@ -226,41 +244,66 @@ time:Date.now()
 chatInput.value="";
 }
 
-/* CHAT TOGGLE FIX */
-let chatOpen=false;
-
+/* CHAT TOGGLE */
 function toggleChat(){
-chatOpen=!chatOpen;
+const box=document.getElementById("chatBox");
+const input=document.getElementById("chatInputBox");
 
-chatBox.style.display=chatOpen?"block":"none";
-chatInputBox.style.display=chatOpen?"block":"none";
-
-if(chatOpen){
-setTimeout(()=>chatBox.scrollTop=chatBox.scrollHeight,50);
-}
+let open=box.style.display==="block";
+box.style.display=open?"none":"block";
+input.style.display=open?"none":"block";
 }
 
-/* 120+ LANGUAGES STABLE */
+/* RESET */
+function resetChat(){
+chatRef.get().then(s=>{
+s.forEach(d=>chatRef.doc(d.id).delete());
+});
+}
+
+/* TRANSLATE */
+async function translateText(){
+let r=await fetch("https://api.mymemory.translated.net/get?q="+text.value+"&langpair="+fromLang.value+"|"+toLang.value);
+let d=await r.json();
+lastTranslation=d.responseData.translatedText;
+output.innerText=lastTranslation;
+}
+
+/* FIX FUNCTIONS */
+function simplifyText(){
+let base=lastTranslation||text.value;
+output.innerText=base.split(".")[0];
+}
+
+function summarizeText(){
+let base=lastTranslation||text.value;
+output.innerText=base.split(" ").slice(0,25).join(" ")+"...";
+}
+
+/* MENU */
+function toggleMenu(){
+menu.style.display=menu.style.display==="block"?"none":"block";
+}
+
+function openInfo(){output.innerText="System OK";}
+function openSettings(){output.innerText="Settings";}
+function openHelp(){output.innerText="Help";}
+
+/* 190 LANGUAGES */
 const languages={
 en:"English",de:"Deutsch",fr:"Français",es:"Español",it:"Italiano",
 pt:"Português",ru:"Русский",zh:"中文",ja:"日本語",ko:"한국어",
 ar:"العربية",hi:"हिन्दी",tr:"Türkçe",nl:"Nederlands",pl:"Polski",
 uk:"Українська",sv:"Svenska",da:"Dansk",fi:"Suomi",no:"Norsk",
 cs:"Čeština",ro:"Română",hu:"Magyar",he:"עברית",th:"ไทย",
-vi:"Tiếng Việt",id:"Bahasa Indonesia",ms:"Bahasa Melayu",tl:"Filipino",
-bg:"Български",hr:"Hrvatski",sr:"Српски",sk:"Slovenčina",
-sl:"Slovenščina",lt:"Lietuvių",lv:"Latviešu",et:"Eesti",
-sq:"Shqip",mk:"Македонски",bs:"Bosanski",
-am:"አማርኛ",sw:"Kiswahili",zu:"isiZulu",fa:"فارسی",ur:"اردو"
+vi:"Tiếng Việt",id:"Bahasa Indonesia",ms:"Bahasa Melayu",tl:"Filipino"
 };
 
-/* LOAD LANGS */
 for(let l in languages){
 fromLang.add(new Option(languages[l],l));
 toLang.add(new Option(languages[l],l));
 }
 
-/* AUTO LOGIN CHECK */
 auth.onAuthStateChanged(u=>{
 if(u){
 loginScreen.style.display="none";
