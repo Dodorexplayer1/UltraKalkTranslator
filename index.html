@@ -26,13 +26,9 @@
       border-radius:18px;
       width:92%;
       max-width:540px;
-      position:relative;
-      box-shadow:0 10px 30px rgba(0,0,0,0.4);
     }
 
-    h2{
-      text-align:center;
-    }
+    h2{text-align:center;}
 
     textarea,select,button{
       width:100%;
@@ -49,10 +45,7 @@
       color:white;
     }
 
-    select{
-      background:#0f172a;
-      color:white;
-    }
+    select{background:#0f172a;color:white;}
 
     button{
       background:#3b82f6;
@@ -72,7 +65,7 @@
       min-height:70px;
     }
 
-    /* 💬 CHAT */
+    /* CHAT */
     #chatBox{
       position:fixed;
       bottom:70px;
@@ -81,8 +74,6 @@
       background:#0f172a;
       padding:10px;
       border-radius:12px;
-      font-size:12px;
-      border:1px solid #1f2937;
       display:none;
     }
 
@@ -92,19 +83,19 @@
       background:#111827;
       padding:6px;
       border-radius:8px;
-      margin-bottom:6px;
     }
 
     #chatInput{
       width:100%;
       padding:8px;
+      margin-top:5px;
       border-radius:8px;
       border:none;
       background:#111827;
       color:white;
     }
 
-    /* 💬 BUTTON */
+    /* BUTTON */
     #chatToggle{
       position:fixed;
       bottom:10px;
@@ -113,20 +104,24 @@
       height:55px;
       border-radius:50%;
       background:#3b82f6;
-      color:white;
-      font-size:22px;
       display:flex;
       justify-content:center;
       align-items:center;
       cursor:pointer;
-      box-shadow:0 5px 15px rgba(0,0,0,0.4);
+      font-size:22px;
     }
 
-    @media (max-width:600px){
-      #chatBox{
-        width:90%;
-        right:5%;
-      }
+    /* LOGIN */
+    #loginBox{
+      position:fixed;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      background:#111827;
+      padding:20px;
+      border-radius:12px;
+      display:none;
+      width:260px;
     }
   </style>
 </head>
@@ -148,10 +143,12 @@
     <button onclick="summarizeText()">Zusammenfassen</button>
   </div>
 
+  <button onclick="openLogin()">Login</button>
+
   <div id="output"></div>
 </div>
 
-<!-- 💬 CHAT -->
+<!-- CHAT -->
 <div id="chatBox">
   <b>💬 Chat</b>
   <div id="chatMessages"></div>
@@ -159,8 +156,15 @@
   <button onclick="sendChat()">Senden</button>
 </div>
 
-<!-- 💬 BUTTON -->
+<!-- CHAT BUTTON -->
 <div id="chatToggle" onclick="toggleChat()">💬</div>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <b>Username</b>
+  <input id="usernameInput">
+  <button onclick="saveUsername()">Speichern</button>
+</div>
 
 <script>
 
@@ -178,9 +182,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const chatRef = db.collection("chat");
 
+let username = localStorage.getItem("username") || "";
 let lastResult = "";
 
-/* 🌍 ALLE SPRACHEN */
+/* 🌍 50 SPRACHEN */
 const languages = {
   en:"Englisch", de:"Deutsch", fr:"Französisch", es:"Spanisch",
   it:"Italienisch", pt:"Portugiesisch", ru:"Russisch", zh:"Chinesisch",
@@ -207,12 +212,6 @@ function loadLanguages(){
   }
 }
 
-/* 💬 CHAT TOGGLE */
-function toggleChat(){
-  let box=document.getElementById("chatBox");
-  box.style.display = box.style.display==="none" ? "block" : "none";
-}
-
 /* TRANSLATE */
 async function translateText(){
   let text=document.getElementById("text").value;
@@ -234,15 +233,10 @@ async function translateText(){
 function simplifyText(){
   let text = lastResult || document.getElementById("text").value || "";
   let sentences = text.split(/[.!?]/).map(s=>s.trim()).filter(Boolean);
+
   let keep = Math.max(1, Math.ceil(sentences.length * 0.5));
 
-  let result = sentences.slice(0,keep).map(s=>{
-    let simple = s
-      .replace(/\b(jedoch|allerdings|dennoch|trotzdem)\b/gi,"aber")
-      .replace(/\b(komplex|kompliziert|schwierig)\b/gi,"einfach");
-
-    return simple.length > 80 ? simple.slice(0,70)+"..." : simple;
-  }).join(". ");
+  let result = sentences.slice(0,keep).join(". ");
 
   output.innerText="VEREINFACHT:\n\n"+result+".";
 }
@@ -262,11 +256,31 @@ function summarizeText(){
 }
 
 /* CHAT */
+function toggleChat(){
+  let box=document.getElementById("chatBox");
+  box.style.display = box.style.display==="none"?"block":"none";
+}
+
+function openLogin(){
+  document.getElementById("loginBox").style.display="block";
+}
+
+function saveUsername(){
+  username=document.getElementById("usernameInput").value;
+  localStorage.setItem("username",username);
+  document.getElementById("loginBox").style.display="none";
+}
+
 function sendChat(){
   let msg=document.getElementById("chatInput").value;
-  if(!msg) return;
+  if(!msg || !username) return;
 
-  chatRef.add({text:msg,time:Date.now()});
+  chatRef.add({
+    text:msg,
+    user:username,
+    time:Date.now()
+  });
+
   chatInput.value="";
 }
 
@@ -275,8 +289,9 @@ function loadChat(){
     let box=document.getElementById("chatMessages");
     box.innerHTML="";
     snap.forEach(d=>{
+      let data=d.data();
       let div=document.createElement("div");
-      div.innerText="💬 "+d.data().text;
+      div.innerText="👤 "+data.user+": "+data.text;
       box.appendChild(div);
     });
   });
